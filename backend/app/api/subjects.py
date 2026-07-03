@@ -33,7 +33,7 @@ def create_subject(
     db.commit()
     db.refresh(new_subject)
     
-    return new_subject
+    return new_subject.to_dict()
 
 
 @router.get("", response_model=SubjectListResponse)
@@ -49,8 +49,11 @@ def list_subjects(
         Subject.user_id == current_user.id
     ).order_by(Subject.created_at.desc()).all()
     
+    # Map to subject.to_dict() to compute chapter_count and question_count dynamically
+    serialized_subjects = [sub.to_dict() for sub in subjects]
+    
     return SubjectListResponse(
-        data=subjects,
+        data=serialized_subjects,
         total=len(subjects),
         message="Subjects retrieved successfully"
     )
@@ -77,7 +80,7 @@ def get_subject(
             detail="Subject not found"
         )
     
-    return subject
+    return subject.to_dict()
 
 
 @router.put("/{subject_id}", response_model=SubjectResponse)
@@ -106,7 +109,7 @@ def update_subject(
     db.commit()
     db.refresh(subject)
     
-    return subject
+    return subject.to_dict()
 
 
 @router.delete("/{subject_id}", status_code=status.HTTP_204_NO_CONTENT)
