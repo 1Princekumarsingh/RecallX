@@ -7,6 +7,8 @@ const api = axios.create({
   },
   // Allow sending http-only auth cookies
   withCredentials: true,
+  // Increase timeout for Render free tier spin-up (default is 0 = no timeout)
+  timeout: 60000, // 60 seconds to handle backend spin-up
 })
 // Do not attach Authorization header from localStorage here.
 // The server accepts cookie-based sessions; callers may still set Authorization manually if needed.
