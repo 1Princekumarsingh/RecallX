@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { statisticsApi } from '@/api/statistics'
-import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid'
+import { ResponsiveGrid, PhoneFrame } from '@/components/layout'
 
 export default function Statistics() {
   const { data: stats, isLoading, error } = useQuery({
@@ -30,11 +30,12 @@ export default function Statistics() {
   const studyMinutes = 0
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold text-gray-900">Statistics</h1>
-        <p className="text-sm text-gray-600">A snapshot of your progress and study focus.</p>
-      </header>
+    <PhoneFrame>
+      <div className="space-y-6">
+        <header className="space-y-2">
+          <h1 className="text-3xl font-bold text-gray-900">Statistics</h1>
+          <p className="text-sm text-gray-600">A snapshot of your progress and study focus.</p>
+        </header>
 
       <ResponsiveGrid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap="md">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -81,5 +82,6 @@ export default function Statistics() {
         </ResponsiveGrid>
       </div>
     </div>
+  </PhoneFrame>
   )
 }

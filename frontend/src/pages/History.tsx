@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { quizAttemptsApi } from '@/api/quiz-attempts'
+import { PhoneFrame } from '@/components/layout'
 
 export default function History() {
   const { data, isLoading } = useQuery({
@@ -30,11 +31,13 @@ export default function History() {
   }
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold text-gray-900">Attempt History</h1>
-        <p className="text-sm text-gray-600">Review your recent quiz sessions and outcomes.</p>
-      </header>
+    <PhoneFrame>
+      <div className="space-y-6">
+        <header className="space-y-2">
+          <h1 className="text-3xl font-bold text-gray-900">Attempt History</h1>
+          <p className="text-sm text-gray-600">Review your recent quiz sessions and outcomes.</p>
+        </header>
+      </div>
 
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -100,6 +103,6 @@ export default function History() {
           </div>
         </div>
       )}
-    </div>
+    </PhoneFrame>
   )
 }

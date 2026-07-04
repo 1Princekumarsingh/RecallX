@@ -43,7 +43,7 @@ export default function Navbar() {
           <DesktopNav navigationItems={navigationItems} currentPath={location.pathname} />
 
           <div className="flex items-center gap-2">
-            <div className="hidden items-center gap-2 rounded-full bg-gray-50 px-3 py-1.5 text-sm text-gray-700 sm:flex">
+            <div className="hidden items-center gap-2 rounded-full bg-gray-50 px-3 py-1.5 text-sm text-gray-700 md:flex">
               <span>Welcome,</span>
               <span className="font-semibold text-gray-900">{user?.username}</span>
             </div>

@@ -7,6 +7,7 @@
 export { default as Layout } from './Layout'
 export { default as Navbar } from './Navbar'
 export { default as Sidebar } from './Sidebar'
+export { default as PhoneFrame } from './PhoneFrame'
 export { Container } from './Container'
 export type { ContainerProps } from './Container'
 export { ResponsiveGrid } from './ResponsiveGrid'
