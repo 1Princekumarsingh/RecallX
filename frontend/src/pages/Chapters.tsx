@@ -12,6 +12,7 @@ import ChapterFormModal from '@/components/chapters/ChapterFormModal'
 import QuizConfigModal, { QuizConfiguration } from '@/components/chapters/QuizConfigModal'
 import ExportModal from '@/components/chapters/ExportModal'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
+import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid'
 
 export default function Chapters() {
   const navigate = useNavigate()
@@ -236,7 +237,7 @@ export default function Chapters() {
 
       {/* Chapters Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <ResponsiveGrid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap="md">
           {[1, 2, 3].map((i) => (
             <div key={i} className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
               <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
@@ -246,7 +247,7 @@ export default function Chapters() {
               </div>
             </div>
           ))}
-        </div>
+        </ResponsiveGrid>
       ) : chaptersData?.data.length === 0 ? (
         <div className="bg-white p-12 rounded-lg shadow-sm border border-gray-200 text-center">
           <svg
@@ -272,7 +273,7 @@ export default function Chapters() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <ResponsiveGrid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap="md">
           {chaptersData?.data.map((chapter) => (
             <ChapterCard
               key={chapter.id}
@@ -286,7 +287,7 @@ export default function Chapters() {
               onExport={handleExport}
             />
           ))}
-        </div>
+        </ResponsiveGrid>
       )}
 
       {/* Create Chapter Modal */}
@@ -330,7 +331,7 @@ export default function Chapters() {
         }
         confirmText="Delete Chapter"
         cancelText="Cancel"
-        confirmButtonClass="bg-red-600 hover:bg-red-700"
+        confirmVariant="danger"
         isLoading={deleteMutation.isPending}
       />
 

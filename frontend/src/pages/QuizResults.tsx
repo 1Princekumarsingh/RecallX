@@ -5,6 +5,7 @@ import { QuizConfig, QuizState } from '@/types/quiz'
 import { quizAttemptsApi } from '@/api/quiz-attempts'
 import { quizProgressApi } from '@/api/quiz-progress'
 import { deserializeQuizState } from '@/lib/quizProgress'
+import { CircularProgress } from '@/components/common'
 
 interface ResultMetrics {
   totalQuestions: number
@@ -164,9 +165,9 @@ export default function QuizResults() {
 
   if (!metrics || !quizState) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center" role="status" aria-live="polite">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-primary-600"></div>
           <p className="mt-4 text-gray-600">Loading results...</p>
         </div>
       </div>
@@ -175,25 +176,33 @@ export default function QuizResults() {
 
   // Summary View (existing code)
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-8 animate-fade-in">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900">Quiz Results</h1>
           <p className="mt-2 text-gray-600">Here's how you performed</p>
         </div>
 
         {/* Score Summary Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          {/* Large Score Display */}
-          <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-8 text-center">
+        <section aria-labelledby="quiz-results-summary" className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+          {/* Large Score Display with Circular Progress */}
+          <div className="px-6 py-12 text-center" id="quiz-results-summary">
+            <CircularProgress 
+              percentage={metrics.accuracyPercentage}
+              label="Accuracy"
+              size="lg"
+              color={metrics.accuracyPercentage >= 80 ? 'success' : metrics.accuracyPercentage >= 60 ? 'warning' : 'error'}
+              className="mb-6"
+            />
+            
             <div className="text-white">
-              <div className="text-6xl font-bold mb-2">
-                {metrics.correctAnswers}/{metrics.totalQuestions}
+              <div className="text-2xl font-bold text-gray-900 mb-1">
+                {metrics.correctAnswers} out of {metrics.totalQuestions} Correct
               </div>
-              <div className="text-2xl font-semibold">
+              <p className="text-gray-600">
                 {metrics.accuracyPercentage.toFixed(1)}% Accuracy
-              </div>
+              </p>
             </div>
           </div>
 
@@ -201,8 +210,8 @@ export default function QuizResults() {
           <div className="p-4 md:p-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
               {/* Total Questions */}
-              <div className="text-center p-3 md:p-4 bg-gray-50 rounded-lg">
-                <div className="text-2xl md:text-3xl font-bold text-gray-900">
+              <div className="text-center p-3 md:p-4 bg-gray-50 rounded-lg border-2 border-gray-200 hover:border-gray-300 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
+                <div className="text-2xl font-bold text-gray-900 md:text-3xl" aria-label={`Total questions: ${metrics.totalQuestions}`}>
                   {metrics.totalQuestions}
                 </div>
                 <div className="text-xs md:text-sm text-gray-600 mt-1">
@@ -211,8 +220,8 @@ export default function QuizResults() {
               </div>
 
               {/* Correct Answers */}
-              <div className="text-center p-3 md:p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl md:text-3xl font-bold text-green-700">
+              <div className="text-center p-3 md:p-4 bg-green-50 rounded-lg border-2 border-green-200 hover:border-green-300 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
+                <div className="text-2xl font-bold text-green-700 md:text-3xl" aria-label={`Correct answers: ${metrics.correctAnswers}`}>
                   {metrics.correctAnswers}
                 </div>
                 <div className="text-xs md:text-sm text-green-600 mt-1">
@@ -221,8 +230,8 @@ export default function QuizResults() {
               </div>
 
               {/* Wrong Answers */}
-              <div className="text-center p-3 md:p-4 bg-red-50 rounded-lg">
-                <div className="text-2xl md:text-3xl font-bold text-red-700">
+              <div className="text-center p-3 md:p-4 bg-red-50 rounded-lg border-2 border-red-200 hover:border-red-300 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
+                <div className="text-2xl font-bold text-red-700 md:text-3xl" aria-label={`Wrong answers: ${metrics.wrongAnswers}`}>
                   {metrics.wrongAnswers}
                 </div>
                 <div className="text-xs md:text-sm text-red-600 mt-1">
@@ -231,8 +240,8 @@ export default function QuizResults() {
               </div>
 
               {/* Unanswered */}
-              <div className="text-center p-3 md:p-4 bg-yellow-50 rounded-lg">
-                <div className="text-2xl md:text-3xl font-bold text-yellow-700">
+              <div className="text-center p-3 md:p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200 hover:border-yellow-300 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
+                <div className="text-2xl font-bold text-yellow-700 md:text-3xl" aria-label={`Unanswered questions: ${metrics.unansweredQuestions}`}>
                   {metrics.unansweredQuestions}
                 </div>
                 <div className="text-xs md:text-sm text-yellow-600 mt-1">
@@ -243,7 +252,7 @@ export default function QuizResults() {
 
             {/* Time Taken */}
             <div className="border-t border-gray-200 pt-6">
-              <div className="flex items-center justify-center space-x-2 text-gray-700">
+              <div className="flex items-center justify-center space-x-2 text-gray-700" aria-label={`Time taken: ${formatTime(metrics.totalTimeSeconds)}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -254,44 +263,47 @@ export default function QuizResults() {
             </div>
 
             {/* Performance Message */}
-            <div className="mt-6 text-center">
+            <div className="mt-8 text-center">
               {metrics.accuracyPercentage >= 80 ? (
-                <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <div className="inline-flex flex-col items-center px-6 py-4 bg-green-50 border-2 border-green-200 text-green-800 rounded-lg">
+                  <svg className="w-8 h-8 mb-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  Excellent Performance!
+                  <span className="text-lg font-bold">Excellent!</span>
+                  <span className="text-sm text-green-700 mt-1">Outstanding performance</span>
                 </div>
               ) : metrics.accuracyPercentage >= 60 ? (
-                <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-full">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <div className="inline-flex flex-col items-center px-6 py-4 bg-blue-50 border-2 border-blue-200 text-blue-800 rounded-lg">
+                  <svg className="w-8 h-8 mb-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
-                  Good Job! Keep Practicing
+                  <span className="text-lg font-bold">Good Job!</span>
+                  <span className="text-sm text-blue-700 mt-1">Keep practicing to improve</span>
                 </div>
               ) : (
-                <div className="inline-flex items-center px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <div className="inline-flex flex-col items-center px-6 py-4 bg-yellow-50 border-2 border-yellow-200 text-yellow-800 rounded-lg">
+                  <svg className="w-8 h-8 mb-2 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
-                  Keep Practicing to Improve
+                  <span className="text-lg font-bold">Keep Practicing</span>
+                  <span className="text-sm text-yellow-700 mt-1">You're on the right track</span>
                 </div>
               )}
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Action Buttons */}
-        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
+        <div className="mt-8 flex flex-col flex-wrap justify-center gap-3 sm:flex-row sm:gap-4">
           <button
             onClick={handleBackToChapter}
-            className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+            className="rounded-lg border-2 border-gray-300 bg-white px-6 py-3 font-medium text-gray-700 transition-all duration-200 hover:scale-105 hover:bg-gray-50 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
           >
-            Back to Chapter
+            ← Back to Chapter
           </button>
           <button
             onClick={handleReviewAnswers}
-            className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-blue-700 hover:shadow-lg active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
           >
             Review Answers
           </button>
@@ -310,7 +322,7 @@ export default function QuizResults() {
                 }
                 navigate(`/quiz/${chapterId}?${params.toString()}`)
               }}
-              className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
+              className="rounded-lg bg-green-600 px-6 py-3 font-medium text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-green-700 hover:shadow-lg active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
             >
               Next Batch
             </button>
@@ -338,7 +350,7 @@ export default function QuizResults() {
               }
               navigate(`/quiz/${chapterId}${params.toString() ? `?${params.toString()}` : ''}`)
             }}
-            className="px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
+            className="rounded-lg bg-primary-600 px-6 py-3 font-medium text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-primary-700 hover:shadow-lg active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
           >
             Retry Quiz
           </button>

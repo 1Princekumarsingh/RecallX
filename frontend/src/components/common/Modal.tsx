@@ -1,63 +1,107 @@
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, useRef } from 'react'
 
 interface ModalProps {
   isOpen: boolean
   onClose: () => void
   title: string
   children: ReactNode
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl'
+  size?: 'sm' | 'md' | 'lg' | 'full'
+  preventClose?: boolean
+  showCloseButton?: boolean
 }
 
-export default function Modal({ isOpen, onClose, title, children, maxWidth = 'md' }: ModalProps) {
+export default function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = 'md',
+  preventClose = false,
+  showCloseButton = true,
+}: ModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previouslyFocusedElement = useRef<HTMLElement | null>(null)
+
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+    if (!isOpen) return
+
+    previouslyFocusedElement.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !preventClose) {
+        event.preventDefault()
         onClose()
+      }
+
+      if (event.key === 'Tab') {
+        const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+        if (!focusables || focusables.length === 0) {
+          event.preventDefault()
+          return
+        }
+
+        const first = focusables[0]
+        const last = focusables[focusables.length - 1]
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault()
+          last.focus()
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault()
+          first.focus()
+        }
       }
     }
 
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'hidden'
-    }
+    document.addEventListener('keydown', handleKeyDown)
+    document.body.style.overflow = 'hidden'
+    setTimeout(() => dialogRef.current?.querySelector<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')?.focus(), 0)
 
     return () => {
-      document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'unset'
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+      previouslyFocusedElement.current?.focus()
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, preventClose])
 
   if (!isOpen) return null
 
-  const maxWidthClasses = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl'
+  const sizeClasses = {
+    sm: 'max-w-sm rounded-2xl',
+    md: 'max-w-lg rounded-2xl',
+    lg: 'max-w-2xl rounded-2xl',
+    full: 'w-full h-full max-h-screen rounded-none',
   }
 
+  const isFullScreen = size === 'full' || typeof window !== 'undefined' && window.innerWidth < 768
+
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black bg-opacity-50 p-4 sm:items-center"
-      onClick={onClose}
-    >
-      <div 
-        className={`my-4 flex max-h-[calc(100vh-2rem)] w-full ${maxWidthClasses[maxWidth]} transform flex-col overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:my-0`}
-        onClick={(e) => e.stopPropagation()}
+    <div className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto bg-black/40 p-0 animation-pulse sm:items-center sm:p-4 animate-fade-in" onClick={() => { if (!preventClose) onClose() }}>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className={`my-0 flex max-h-screen w-full flex-col overflow-hidden bg-white shadow-2xl animate-modal-open sm:my-0 ${isFullScreen ? 'h-full max-w-none' : `${sizeClasses[size]} max-h-[calc(100vh-2rem)]`}`}
+        onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex flex-shrink-0 justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="Close modal"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 px-5 py-4 sm:px-6">
+          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          {showCloseButton ? (
+            <button
+              type="button"
+              onClick={() => { if (!preventClose) onClose() }}
+              className="touch-target flex items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              aria-label="Close modal"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          ) : null}
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-6">
+        <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">
           {children}
         </div>
       </div>

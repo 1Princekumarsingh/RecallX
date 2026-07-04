@@ -52,7 +52,9 @@ def login(request: LoginRequest, db: Session = Depends(get_db), response: Respon
             value=access_token,
             httponly=True,
             secure=settings.COOKIE_SECURE,
-            samesite=settings.COOKIE_SAMESITE
+            samesite=settings.COOKIE_SAMESITE,
+            path='/',
+            max_age=(settings.ACCESS_TOKEN_EXPIRE_DAYS * 24 * 60 * 60),
         )
 
     # Return token in body for backward compatibility but cookie will be used by the client
@@ -74,5 +76,6 @@ def logout(response: Response):
     """
     Logout endpoint. Clears the auth cookie.
     """
-    response.delete_cookie("access_token")
+    # Ensure we delete the cookie with the same path used when setting it
+    response.delete_cookie("access_token", path='/')
     return {"message": "Logged out successfully"}

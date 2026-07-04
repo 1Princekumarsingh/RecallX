@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { statisticsApi } from '@/api/statistics'
+import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid'
 
 export default function Statistics() {
   const { data: stats, isLoading, error } = useQuery({
@@ -30,9 +31,12 @@ export default function Statistics() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Statistics</h1>
+      <header className="space-y-2">
+        <h1 className="text-3xl font-bold text-gray-900">Statistics</h1>
+        <p className="text-sm text-gray-600">A snapshot of your progress and study focus.</p>
+      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <ResponsiveGrid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap="md">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="text-sm font-medium text-gray-600">Total Study Time</div>
           <div className="text-3xl font-bold text-gray-900 mt-2">{studyHours}h {studyMinutes}m</div>
@@ -53,28 +57,28 @@ export default function Statistics() {
               : '0.0%'}
           </div>
         </div>
-      </div>
+      </ResponsiveGrid>
 
-      <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Question Status Distribution</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-gray-50 p-4 rounded-lg text-center">
-            <span className="text-sm text-gray-500 block">Total Questions</span>
+        <ResponsiveGrid columns={{ mobile: 1, tablet: 2, desktop: 4 }} gap="sm">
+          <div className="rounded-lg bg-gray-50 p-4 text-center">
+            <span className="block text-sm text-gray-500">Total Questions</span>
             <span className="text-2xl font-bold text-gray-900">{stats?.total_questions ?? 0}</span>
           </div>
-          <div className="bg-green-50 p-4 rounded-lg text-center">
-            <span className="text-sm text-green-700 block">Completed</span>
+          <div className="rounded-lg bg-green-50 p-4 text-center">
+            <span className="block text-sm text-green-700">Completed</span>
             <span className="text-2xl font-bold text-green-950">{stats?.completed_questions ?? 0}</span>
           </div>
-          <div className="bg-blue-50 p-4 rounded-lg text-center">
-            <span className="text-sm text-blue-700 block">In Review</span>
+          <div className="rounded-lg bg-blue-50 p-4 text-center">
+            <span className="block text-sm text-blue-700">In Review</span>
             <span className="text-2xl font-bold text-blue-950">{stats?.review_questions ?? 0}</span>
           </div>
-          <div className="bg-red-50 p-4 rounded-lg text-center">
-            <span className="text-sm text-red-700 block">Errors</span>
+          <div className="rounded-lg bg-red-50 p-4 text-center">
+            <span className="block text-sm text-red-700">Errors</span>
             <span className="text-2xl font-bold text-red-950">{stats?.errors ?? 0}</span>
           </div>
-        </div>
+        </ResponsiveGrid>
       </div>
     </div>
   )

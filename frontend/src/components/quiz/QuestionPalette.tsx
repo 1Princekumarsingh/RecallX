@@ -38,47 +38,29 @@ export default function QuestionPalette({ state, onQuestionSelect, onClose }: Qu
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Question Palette</h3>
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-lg">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-slate-900">Question Palette</h3>
         {onClose && (
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         )}
       </div>
 
-      {/* Legend */}
-      <div className="mb-4 space-y-2 text-sm">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded border-2 bg-green-100 border-green-300"></div>
-          <span className="text-gray-700">Answered</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded border-2 bg-purple-100 border-purple-300"></div>
-          <span className="text-gray-700">Marked for Review</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded border-2 bg-red-100 border-red-300"></div>
-          <span className="text-gray-700">Not Answered</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded border-2 bg-gray-100 border-gray-300"></div>
-          <span className="text-gray-700">Not Visited</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded border-2 bg-primary-600 border-primary-600"></div>
-          <span className="text-gray-700">Current Question</span>
-        </div>
+      <div className="mb-4 hidden gap-2 text-sm text-slate-600 sm:grid sm:grid-cols-2">
+        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full border border-emerald-300 bg-emerald-100"></div><span>Answered</span></div>
+        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full border border-violet-300 bg-violet-100"></div><span>Marked</span></div>
+        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full border border-rose-300 bg-rose-100"></div><span>Not answered</span></div>
+        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full border border-slate-300 bg-slate-100"></div><span>Not visited</span></div>
       </div>
 
-      {/* Question Grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-2 sm:grid sm:grid-cols-4 sm:gap-2 lg:grid-cols-5">
         {state.questions.map((question, index) => {
           const status = getQuestionStatus(index)
           const isCurrent = index === state.current_question_index
@@ -87,12 +69,7 @@ export default function QuestionPalette({ state, onQuestionSelect, onClose }: Qu
             <button
               key={question.id}
               onClick={() => onQuestionSelect(index)}
-              className={`
-                w-full aspect-square rounded border-2 font-semibold text-xs sm:text-sm
-                transition-all duration-200 min-h-[44px] min-w-[44px]
-                ${getStatusColor(status, isCurrent)}
-                ${isCurrent ? 'ring-2 ring-primary-300 ring-offset-2' : ''}
-              `}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-semibold transition-all duration-200 sm:h-12 sm:w-full sm:min-h-[44px] ${getStatusColor(status, isCurrent)} ${isCurrent ? 'ring-2 ring-primary-300 ring-offset-2' : ''}`}
               title={`Question ${question.question_number}`}
             >
               {question.question_number}
@@ -101,27 +78,26 @@ export default function QuestionPalette({ state, onQuestionSelect, onClose }: Qu
         })}
       </div>
 
-      {/* Statistics */}
-      <div className="mt-6 pt-4 border-t border-gray-200 grid grid-cols-2 gap-3 text-sm">
+      <div className="mt-6 grid grid-cols-2 gap-3 border-t border-slate-200 pt-4 text-sm">
         <div className="flex justify-between">
-          <span className="text-gray-600">Total:</span>
-          <span className="font-semibold text-gray-900">{state.questions.length}</span>
+          <span className="text-slate-600">Total:</span>
+          <span className="font-semibold text-slate-900">{state.questions.length}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Answered:</span>
-          <span className="font-semibold text-green-600">
+          <span className="text-slate-600">Answered:</span>
+          <span className="font-semibold text-emerald-600">
             {Array.from(state.answers.values()).filter(a => a.selected_answer !== null).length}
           </span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Not Answered:</span>
-          <span className="font-semibold text-red-600">
+          <span className="text-slate-600">Not answered:</span>
+          <span className="font-semibold text-rose-600">
             {Array.from(state.answers.values()).filter(a => a.selected_answer === null && a.is_visited).length}
           </span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Marked:</span>
-          <span className="font-semibold text-purple-600">
+          <span className="text-slate-600">Marked:</span>
+          <span className="font-semibold text-violet-600">
             {Array.from(state.answers.values()).filter(a => a.is_bookmarked).length}
           </span>
         </div>

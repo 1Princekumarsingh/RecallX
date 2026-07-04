@@ -6,12 +6,31 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  color: #111827;
+  background-color: #f9fafb;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --fluid-text-xs: clamp(0.75rem, 0.7rem + 0.2vw, 0.875rem);
+  --fluid-text-sm: clamp(0.875rem, 0.82rem + 0.2vw, 1rem);
+  --fluid-text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --fluid-text-lg: clamp(1.125rem, 1rem + 0.35vw, 1.25rem);
+  --fluid-text-xl: clamp(1.25rem, 1.1rem + 0.6vw, 1.75rem);
+  --fluid-text-2xl: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  min-width: 320px;
+  overflow-x: hidden;
   background-color: #f9fafb;
+  color: #111827;
 }
 
 #root {
@@ -20,4 +39,151 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+img,
+svg,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+@layer utilities {
+  .text-fluid-xs {
+    font-size: var(--fluid-text-xs);
+  }
+
+  .text-fluid-sm {
+    font-size: var(--fluid-text-sm);
+  }
+
+  .text-fluid-base {
+    font-size: var(--fluid-text-base);
+  }
+
+  .text-fluid-lg {
+    font-size: var(--fluid-text-lg);
+  }
+
+  .text-fluid-xl {
+    font-size: var(--fluid-text-xl);
+  }
+
+  .text-fluid-2xl {
+    font-size: var(--fluid-text-2xl);
+  }
+
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .touch-target-sm {
+    min-height: 40px;
+    min-width: 40px;
+  }
+
+  .prevent-horizontal-scroll {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .responsive-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .responsive-flex {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .center-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .select-none-safe {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Animation Utilities */
+  .transition-smooth {
+    @apply transition-all duration-150 ease-in-out;
+  }
+
+  .transition-slower {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .hover-scale-105 {
+    @apply transition-transform duration-150 ease-in-out hover:scale-105;
+  }
+
+  .hover-scale-up {
+    @apply transition-all duration-150 ease-in-out hover:scale-110 hover:shadow-elevated-hover;
+  }
+
+  .active-scale-95 {
+    @apply active:scale-95 transition-transform duration-100;
+  }
+
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-150;
+  }
+
+  .focus-ring-inset {
+    @apply focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 transition-all duration-150;
+  }
+
+  /* Button Animation States */
+  .btn-hover-animation {
+    @apply transition-all duration-150 ease-in-out hover:scale-105 active:scale-95 focus-ring;
+  }
+
+  /* Card Hover Effects */
+  .card-hover {
+    @apply transition-all duration-150 ease-in-out hover:shadow-elevated-hover hover:scale-105;
+  }
+
+  /* Smooth Fade Transitions */
+  .fade-enter {
+    @apply opacity-0;
+  }
+
+  .fade-enter-active {
+    @apply transition-opacity duration-200 ease-in-out opacity-100;
+  }
+
+  .fade-exit {
+    @apply opacity-100;
+  }
+
+  .fade-exit-active {
+    @apply transition-opacity duration-200 ease-in-out opacity-0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

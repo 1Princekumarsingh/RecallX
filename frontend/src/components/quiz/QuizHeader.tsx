@@ -89,24 +89,25 @@ export default function QuizHeader({
   }
 
   const getTimeDisplay = () => {
+    const sharedClasses = 'rounded-2xl border px-3 py-2 shadow-sm'
+
     if (timer_mode === 'unlimited') {
       return (
-        <div className="text-sm">
-          <span className="text-gray-600">Time Elapsed: </span>
-          <span className="font-mono font-semibold text-gray-900">{formatTime(elapsed)}</span>
+        <div className={`${sharedClasses} border-slate-200 bg-slate-50`}>
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Elapsed</div>
+          <div className="font-mono text-lg font-semibold text-slate-900">{formatTime(elapsed)}</div>
         </div>
       )
     }
 
     if (timer_mode === 'per_question' && timer_value) {
       const isLowTime = questionRemaining <= 10 && questionRemaining > 0
+      const tone = isLowTime ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'
 
       return (
-        <div className={`text-sm ${isLowTime ? 'animate-pulse' : ''}`}>
-          <span className="text-gray-600">Question Time: </span>
-          <span className={`font-mono font-semibold ${isLowTime ? 'text-red-600' : 'text-gray-900'}`}>
-            {formatTime(questionRemaining)}
-          </span>
+        <div className={`${sharedClasses} ${tone} ${isLowTime ? 'animate-pulse' : ''}`}>
+          <div className="text-[11px] font-semibold uppercase tracking-wide">Question timer</div>
+          <div className="font-mono text-lg font-semibold">{formatTime(questionRemaining)}</div>
         </div>
       )
     }
@@ -114,15 +115,14 @@ export default function QuizHeader({
     if (timer_mode === 'whole_test' && timer_value) {
       const remaining = Math.max(0, (timer_value * 60) - elapsed)
       const isLowTime = remaining <= 300 && remaining > 0
-      
+      const tone = remaining <= 60 ? 'border-rose-200 bg-rose-50 text-rose-700' : isLowTime ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+
       return (
-        <div className={`text-sm ${isLowTime ? 'animate-pulse' : ''}`}>
-          <span className="text-gray-600">Time Remaining: </span>
-          <span className={`font-mono font-semibold ${isLowTime ? 'text-red-600' : 'text-gray-900'}`}>
-            {formatTime(remaining)}
-          </span>
+        <div className={`${sharedClasses} ${tone} ${isLowTime ? 'animate-pulse' : ''}`}>
+          <div className="text-[11px] font-semibold uppercase tracking-wide">Time left</div>
+          <div className="font-mono text-lg font-semibold">{formatTime(remaining)}</div>
           {showWarning && isLowTime && (
-            <span className="ml-2 text-xs text-red-600 font-medium">⚠ Hurry up!</span>
+            <div className="text-[11px] font-medium">Hurry up</div>
           )}
         </div>
       )
@@ -141,47 +141,43 @@ export default function QuizHeader({
   }
 
   return (
-    <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between">
-          {/* Left: Title & Mode */}
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">{title}</h1>
-            <div className="flex items-center space-x-3 mt-1">
-              <span className={`px-2 py-1 rounded text-xs font-medium ${
+    <div className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+      <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg font-semibold text-slate-900">{title}</h1>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${
                 mode === 'practice'
-                  ? 'bg-blue-100 text-blue-800'
-                  : 'bg-purple-100 text-purple-800'
+                  ? 'bg-sky-100 text-sky-700'
+                  : 'bg-violet-100 text-violet-700'
               }`}>
-                {mode === 'practice' ? '📖 Practice Mode' : '🎯 Exam Mode'}
+                {mode === 'practice' ? 'Practice' : 'Exam'}
               </span>
               {timer_mode !== 'unlimited' && (
-                <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                  ⏱ {timer_mode === 'per_question' ? 'Timed Questions' : 'Timed Test'}
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-700">
+                  {timer_mode === 'per_question' ? 'Timed question' : 'Timed test'}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Center: Timer */}
           <div className="hidden md:block">
             {getTimeDisplay()}
           </div>
 
-          {/* Right: Exit */}
           <button
             onClick={handleExit}
-            className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
             <span className="hidden sm:inline">Save & Exit</span>
           </button>
         </div>
 
-        {/* Mobile Timer */}
-        <div className="md:hidden mt-3 text-center">
+        <div className="mt-3 flex justify-center md:hidden">
           {getTimeDisplay()}
         </div>
       </div>

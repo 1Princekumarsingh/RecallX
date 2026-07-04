@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactNode, useEffect, useRef } from 'react'
 import Modal from './Modal'
 
 interface ConfirmDialogProps {
@@ -9,7 +9,7 @@ interface ConfirmDialogProps {
   message: string | ReactNode
   confirmText?: string
   cancelText?: string
-  confirmButtonClass?: string
+  confirmVariant?: 'danger' | 'warning' | 'primary'
   isLoading?: boolean
 }
 
@@ -21,32 +21,45 @@ export default function ConfirmDialog({
   message,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
-  confirmButtonClass = 'bg-red-600 hover:bg-red-700',
-  isLoading = false
+  confirmVariant = 'danger',
+  isLoading = false,
 }: ConfirmDialogProps) {
-  const handleConfirm = () => {
-    onConfirm()
+  const cancelButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => cancelButtonRef.current?.focus(), 0)
+    }
+  }, [isOpen])
+
+  const confirmClasses = {
+    danger: 'bg-error-600 text-white hover:bg-error-700',
+    warning: 'bg-warning-600 text-white hover:bg-warning-700',
+    primary: 'bg-primary-600 text-white hover:bg-primary-700',
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="sm">
-      <div className="space-y-4">
-        <div className="text-gray-600">
+    <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm" preventClose={isLoading}>
+      <div className="space-y-5">
+        <div className="text-sm leading-6 text-gray-600">
           {typeof message === 'string' ? <p>{message}</p> : message}
         </div>
-        
-        <div className="flex justify-end space-x-3">
+
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <button
+            ref={cancelButtonRef}
+            type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="touch-target rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-150 hover:scale-105 active:scale-95 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:scale-100"
           >
             {cancelText}
           </button>
           <button
-            onClick={handleConfirm}
+            type="button"
+            onClick={onConfirm}
             disabled={isLoading}
-            className={`px-4 py-2 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ${confirmButtonClass}`}
+            className={`touch-target rounded-xl px-4 py-2 text-sm font-medium transition-all duration-150 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:scale-100 ${confirmClasses[confirmVariant]}`}
           >
             {isLoading ? 'Processing...' : confirmText}
           </button>

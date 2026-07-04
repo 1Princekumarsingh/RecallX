@@ -5,6 +5,7 @@ import { Subject } from '@/types/subject'
 import SubjectCard from '@/components/subjects/SubjectCard'
 import SubjectFormModal from '@/components/subjects/SubjectFormModal'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
+import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid'
 
 export default function Subjects() {
   const queryClient = useQueryClient()
@@ -107,7 +108,7 @@ export default function Subjects() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <ResponsiveGrid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap="md">
           {[1, 2, 3].map((i) => (
             <div key={i} className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
               <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
@@ -117,7 +118,7 @@ export default function Subjects() {
               </div>
             </div>
           ))}
-        </div>
+        </ResponsiveGrid>
       ) : subjectsData?.data.length === 0 ? (
         <div className="bg-white p-12 rounded-lg shadow-sm border border-gray-200 text-center">
           <svg
@@ -143,7 +144,7 @@ export default function Subjects() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <ResponsiveGrid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap="md">
           {subjectsData?.data.map((subject) => (
             <SubjectCard
               key={subject.id}
@@ -152,7 +153,7 @@ export default function Subjects() {
               onDelete={openDeleteDialog}
             />
           ))}
-        </div>
+        </ResponsiveGrid>
       )}
 
       {/* Create Subject Modal */}
@@ -196,7 +197,7 @@ export default function Subjects() {
         }
         confirmText="Delete Subject"
         cancelText="Cancel"
-        confirmButtonClass="bg-red-600 hover:bg-red-700"
+        confirmVariant="danger"
         isLoading={deleteMutation.isPending}
       />
     </div>

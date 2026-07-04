@@ -1,10 +1,15 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { parseApi } from '@/api/parse'
 import { questionsApi } from '@/api/questions'
+import Button from '@/components/common/Button'
+import ConfirmDialog from '@/components/common/ConfirmDialog'
+import Input from '@/components/common/Input'
+import { useToast } from '@/contexts/ToastContext'
 import { ParsedQuestion } from '@/types/parse'
 import { QuestionBase } from '@/types/question'
+import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 
 interface ApiErrorResponse {
   response?: {
@@ -18,6 +23,7 @@ interface ApiErrorResponse {
 export default function QuestionImport() {
   const navigate = useNavigate()
   const { subjectId, chapterId } = useParams()
+  const { addToast } = useToast()
   const [activeTab, setActiveTab] = useState<'text' | 'docx'>('text')
   const [textInput, setTextInput] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -30,12 +36,16 @@ export default function QuestionImport() {
   const [editingQuestions, setEditingQuestions] = useState<ParsedQuestion[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [filterMode, setFilterMode] = useState<'all' | 'valid' | 'invalid'>('all')
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 250)
+  const [expandedQuestions, setExpandedQuestions] = useState<Record<number, boolean>>({})
   const [saveProgress, setSaveProgress] = useState<{
     show: boolean
     current: number
     total: number
     message: string
   }>({ show: false, current: 0, total: 0, message: '' })
+  const [validationNotice, setValidationNotice] = useState<{ type: 'error' | 'info'; message: string } | null>(null)
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null)
 
   // Parse text mutation
   const parseTextMutation = useMutation({
@@ -43,6 +53,13 @@ export default function QuestionImport() {
     onSuccess: (data) => {
       setParseResult(data)
       setEditingQuestions(data.questions)
+      setValidationNotice(null)
+      addToast({
+        title: 'Questions parsed',
+        message: `Found ${data.questions.length} questions ready for review.`,
+        variant: 'info',
+        duration: 2500,
+      })
     }
   })
 
@@ -53,6 +70,13 @@ export default function QuestionImport() {
       setParseResult(data)
       setEditingQuestions(data.questions)
       setSelectedFile(null)
+      setValidationNotice(null)
+      addToast({
+        title: 'DOCX parsed',
+        message: `Found ${data.questions.length} questions ready for review.`,
+        variant: 'info',
+        duration: 2500,
+      })
     }
   })
 
@@ -84,26 +108,31 @@ export default function QuestionImport() {
         total: data.saved_count,
         message: `Successfully saved ${data.saved_count} question${data.saved_count !== 1 ? 's' : ''}!`
       })
-      
-      // Redirect after showing success message
+      addToast({
+        title: 'Questions saved',
+        message: `${data.saved_count} question${data.saved_count !== 1 ? 's' : ''} were added to the chapter.`,
+        variant: 'success',
+        duration: 3000,
+      })
       setTimeout(() => {
         navigate(`/subjects/${subjectId}/chapters/${chapterId}`)
-      }, 1500)
+      }, 2000)
     },
     onError: (error: unknown) => {
       const apiError = error as ApiErrorResponse
       setSaveProgress({ show: false, current: 0, total: 0, message: '' })
-      
       const errorMessage = apiError.response?.data?.detail || apiError.message || 'Unknown error occurred'
-      alert(`Failed to save questions:\n\n${errorMessage}\n\nAll changes have been rolled back. Please fix the errors and try again.`)
+      setValidationNotice({ type: 'error', message: errorMessage })
+      addToast({ title: 'Save failed', message: errorMessage, variant: 'error', duration: 5000 })
     }
   })
 
   const handleParseText = () => {
     if (!textInput.trim()) {
-      alert('Please enter some text to parse')
+      setValidationNotice({ type: 'error', message: 'Please enter some text to parse.' })
       return
     }
+    setValidationNotice(null)
     parseTextMutation.mutate(textInput)
   }
 
@@ -111,18 +140,20 @@ export default function QuestionImport() {
     const file = e.target.files?.[0]
     if (file) {
       if (!file.name.toLowerCase().endsWith('.docx')) {
-        alert('Please select a .docx file')
+        setValidationNotice({ type: 'error', message: 'Please select a DOCX file.' })
         return
       }
       setSelectedFile(file)
+      setValidationNotice(null)
     }
   }
 
   const handleParseDocx = () => {
     if (!selectedFile) {
-      alert('Please select a file first')
+      setValidationNotice({ type: 'error', message: 'Please select a file before parsing.' })
       return
     }
+    setValidationNotice(null)
     parseDocxMutation.mutate(selectedFile)
   }
 
@@ -133,6 +164,7 @@ export default function QuestionImport() {
     setEditingQuestions([])
     setSearchQuery('')
     setFilterMode('all')
+    setValidationNotice(null)
   }
 
   const handleQuestionEdit = (index: number, field: string, value: string) => {
@@ -142,12 +174,19 @@ export default function QuestionImport() {
   }
 
   const handleDeleteQuestion = (index: number) => {
+    setPendingDeleteIndex(index)
+  }
+
+  const confirmDeleteQuestion = () => {
+    if (pendingDeleteIndex === null) return
+
+    const index = pendingDeleteIndex
+    const deletedQuestion = editingQuestions[index]
     const updated = editingQuestions.filter((_, i) => i !== index)
     setEditingQuestions(updated)
-    
-    // Update parse result counts
+    setPendingDeleteIndex(null)
+
     if (parseResult) {
-      const deletedQuestion = editingQuestions[index]
       setParseResult({
         ...parseResult,
         total_questions: parseResult.total_questions - 1,
@@ -156,6 +195,20 @@ export default function QuestionImport() {
         questions: updated
       })
     }
+
+    addToast({
+      title: 'Question removed',
+      message: `Question ${deletedQuestion?.number || index + 1} was removed from the review list.`,
+      variant: 'warning',
+      duration: 2500,
+    })
+  }
+
+  const toggleQuestionExpanded = (questionNumber: number) => {
+    setExpandedQuestions((prev) => ({
+      ...prev,
+      [questionNumber]: !prev[questionNumber]
+    }))
   }
 
   const handleSaveQuestions = (saveOnlyValid: boolean) => {
@@ -164,7 +217,7 @@ export default function QuestionImport() {
       : editingQuestions
 
     if (questionsToSave.length === 0) {
-      alert('No questions to save!')
+      setValidationNotice({ type: 'error', message: 'There are no questions available to save.' })
       return
     }
 
@@ -179,14 +232,10 @@ export default function QuestionImport() {
     )
 
     if (invalidQuestions.length > 0) {
-      alert(
-        `Cannot save: ${invalidQuestions.length} question(s) have validation errors.\n\n` +
-        `Please ensure:\n` +
-        `• Question text is not empty\n` +
-        `• All options (A, B, C, D) are not empty\n` +
-        `• Correct answer is A, B, C, or D\n\n` +
-        `Fix the errors or save only valid questions.`
-      )
+      setValidationNotice({
+        type: 'error',
+        message: `${invalidQuestions.length} question${invalidQuestions.length > 1 ? 's' : ''} still have validation issues. Fix them or save only valid questions.`,
+      })
       return
     }
 
@@ -194,20 +243,19 @@ export default function QuestionImport() {
     const numbers = questionsToSave.map(q => q.number)
     const duplicates = numbers.filter((n, idx) => numbers.indexOf(n) !== idx)
     if (duplicates.length > 0) {
-      alert(
-        `Cannot save: Duplicate question numbers detected: ${[...new Set(duplicates)].join(', ')}\n\n` +
-        `Each question must have a unique number within the chapter.`
-      )
+      setValidationNotice({
+        type: 'error',
+        message: `Duplicate question numbers detected: ${[...new Set(duplicates)].join(', ')}. Each question needs a unique number.`,
+      })
       return
     }
 
     // Confirm if saving questions with errors
     if (!saveOnlyValid && editingQuestions.some(q => !q.is_valid)) {
-      const confirmSave = window.confirm(
-        `Warning: You are about to save ${questionsToSave.length} questions, including ${questionsToSave.filter(q => !q.is_valid).length} with parsing errors.\n\n` +
-        `These questions may have issues. Continue anyway?`
-      )
-      if (!confirmSave) return
+      setValidationNotice({
+        type: 'info',
+        message: `Saving ${questionsToSave.length} questions, including ${questionsToSave.filter(q => !q.is_valid).length} items that need review.`,
+      })
     }
 
     const formatted: QuestionBase[] = questionsToSave.map(q => ({
@@ -220,18 +268,16 @@ export default function QuestionImport() {
       correct_answer: q.correct_answer
     }))
 
+    setValidationNotice(null)
     bulkSaveMutation.mutate(formatted)
   }
 
-  // Filter questions based on search and filter mode
-  const filteredQuestions = editingQuestions.filter(q => {
-    // Apply filter mode
+  const filteredQuestions = useMemo(() => editingQuestions.filter(q => {
     if (filterMode === 'valid' && !q.is_valid) return false
     if (filterMode === 'invalid' && q.is_valid) return false
-    
-    // Apply search query
-    if (searchQuery) {
-      const searchLower = searchQuery.toLowerCase()
+
+    if (debouncedSearchQuery) {
+      const searchLower = debouncedSearchQuery.toLowerCase()
       return (
         q.question_text.toLowerCase().includes(searchLower) ||
         q.option_a.toLowerCase().includes(searchLower) ||
@@ -240,9 +286,9 @@ export default function QuestionImport() {
         q.option_d.toLowerCase().includes(searchLower)
       )
     }
-    
+
     return true
-  })
+  }), [debouncedSearchQuery, editingQuestions, filterMode])
 
   const isLoading = parseTextMutation.isPending || parseDocxMutation.isPending || bulkSaveMutation.isPending
 
@@ -266,6 +312,11 @@ export default function QuestionImport() {
 
       {/* Tabs */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        {validationNotice && (
+          <div className={`rounded-t-xl border-b px-4 py-3 text-sm ${validationNotice.type === 'error' ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-sky-200 bg-sky-50 text-sky-700'}`} role={validationNotice.type === 'error' ? 'alert' : 'status'}>
+            {validationNotice.message}
+          </div>
+        )}
         <div className="border-b border-gray-200">
           <nav className="flex -mb-px">
             <button
@@ -306,21 +357,13 @@ export default function QuestionImport() {
                 disabled={isLoading}
               />
             </div>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={handleReset}
-                disabled={isLoading}
-                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <Button variant="secondary" onClick={handleReset} disabled={isLoading}>
                 Clear
-              </button>
-              <button
-                onClick={handleParseText}
-                disabled={isLoading || !textInput.trim()}
-                className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              </Button>
+              <Button variant="primary" onClick={handleParseText} disabled={isLoading || !textInput.trim()}>
                 {isLoading ? 'Parsing...' : 'Parse Questions'}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -374,21 +417,13 @@ export default function QuestionImport() {
                 )}
               </div>
             </div>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={handleReset}
-                disabled={isLoading}
-                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <Button variant="secondary" onClick={handleReset} disabled={isLoading}>
                 Clear
-              </button>
-              <button
-                onClick={handleParseDocx}
-                disabled={isLoading || !selectedFile}
-                className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              </Button>
+              <Button variant="primary" onClick={handleParseDocx} disabled={isLoading || !selectedFile}>
                 {isLoading ? 'Parsing...' : 'Parse DOCX'}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -420,47 +455,25 @@ export default function QuestionImport() {
           </div>
 
           {/* Search and Filter */}
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
             <div className="flex-1">
-              <input
+              <Input
                 type="text"
                 placeholder="Search questions..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setFilterMode('all')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  filterMode === 'all'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
+            <div className="flex flex-wrap gap-2">
+              <Button variant={filterMode === 'all' ? 'primary' : 'secondary'} size="sm" onClick={() => setFilterMode('all')}>
                 All ({editingQuestions.length})
-              </button>
-              <button
-                onClick={() => setFilterMode('valid')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  filterMode === 'valid'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
+              </Button>
+              <Button variant={filterMode === 'valid' ? 'primary' : 'secondary'} size="sm" onClick={() => setFilterMode('valid')}>
                 Valid ({editingQuestions.filter(q => q.is_valid).length})
-              </button>
-              <button
-                onClick={() => setFilterMode('invalid')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  filterMode === 'invalid'
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
+              </Button>
+              <Button variant={filterMode === 'invalid' ? 'primary' : 'secondary'} size="sm" onClick={() => setFilterMode('invalid')}>
                 Invalid ({editingQuestions.filter(q => !q.is_valid).length})
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -471,147 +484,161 @@ export default function QuestionImport() {
                 ? `${editingQuestions.length} Questions`
                 : `${filteredQuestions.length} of ${editingQuestions.length} Questions`}
             </h3>
-            <div className="space-y-4 max-h-[50vh] md:max-h-[60vh] overflow-y-auto">
-              {filteredQuestions.map((question) => {
-                const originalIndex = editingQuestions.findIndex(q => q.number === question.number)
+            <div className="space-y-4 max-h-[50vh] md:max-h-[60vh] overflow-y-auto pr-1">
+              {filteredQuestions.map((question, index) => {
+                const originalIndex = editingQuestions.findIndex((q) => q.number === question.number)
+                const isExpanded = expandedQuestions[question.number] ?? false
+
                 return (
                   <div
-                    key={originalIndex}
-                    className={`border rounded-lg p-4 ${
-                      question.is_valid
-                        ? 'border-green-200 bg-green-50'
-                        : 'border-red-200 bg-red-50'
-                    }`}
+                    key={question.number}
+                    className={`rounded-2xl border p-4 shadow-sm transition-all sm:p-5 ${
+                      index % 2 === 0 ? 'bg-white' : 'bg-slate-50/80'
+                    } ${question.is_valid ? 'border-emerald-200' : 'border-rose-200'}`}
                   >
-                    <div className="flex justify-between items-start mb-4">
-                      <h4 className="font-semibold text-gray-900">
-                        Question {question.number}
-                      </h4>
-                      <div className="flex items-center space-x-2">
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded ${
-                            question.is_valid
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {question.is_valid ? 'Valid' : 'Invalid'}
-                        </span>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex min-w-0 flex-1 items-start gap-3">
+                        <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${question.is_valid ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                          {question.number}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h4 className="font-semibold text-slate-900">Question {question.number}</h4>
+                            <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${question.is_valid ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                              {question.is_valid ? 'Valid' : 'Needs review'}
+                            </span>
+                          </div>
+                          <p className="mt-2 text-sm text-slate-600">
+                            {question.question_text.trim() || 'No question text yet'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 self-start">
                         <button
-                          onClick={() => handleDeleteQuestion(originalIndex)}
-                          className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
-                          title="Delete question"
+                          type="button"
+                          onClick={() => toggleQuestionExpanded(question.number)}
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-primary-300 hover:text-primary-600"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
+                          {isExpanded ? 'Collapse' : 'Edit'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteQuestion(originalIndex)}
+                          className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-100"
+                        >
+                          Delete
                         </button>
                       </div>
                     </div>
 
-                    {/* Question Text */}
-                    <div className="mb-3">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Question Text
-                      </label>
-                      <textarea
-                        value={question.question_text}
-                        onChange={(e) => handleQuestionEdit(originalIndex, 'question_text', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-gray-900"
-                        rows={2}
-                      />
-                    </div>
+                    {isExpanded && (
+                      <div className="mt-4 space-y-4 border-t border-slate-200/80 pt-4">
+                        <div>
+                          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                            Question Text
+                          </label>
+                          <textarea
+                            value={question.question_text}
+                            onChange={(e) => handleQuestionEdit(originalIndex, 'question_text', e.target.value)}
+                            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                            rows={2}
+                          />
+                        </div>
 
-                    {/* Options */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Option A
-                        </label>
-                        <input
-                          type="text"
-                          value={question.option_a}
-                          onChange={(e) => handleQuestionEdit(originalIndex, 'option_a', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-gray-900"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Option B
-                        </label>
-                        <input
-                          type="text"
-                          value={question.option_b}
-                          onChange={(e) => handleQuestionEdit(originalIndex, 'option_b', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-gray-900"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Option C
-                        </label>
-                        <input
-                          type="text"
-                          value={question.option_c}
-                          onChange={(e) => handleQuestionEdit(originalIndex, 'option_c', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-gray-900"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Option D
-                        </label>
-                        <input
-                          type="text"
-                          value={question.option_d}
-                          onChange={(e) => handleQuestionEdit(originalIndex, 'option_d', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-gray-900"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Correct Answer */}
-                    <div className="mb-3">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Correct Answer
-                      </label>
-                      <select
-                        value={question.correct_answer}
-                        onChange={(e) => handleQuestionEdit(originalIndex, 'correct_answer', e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-gray-900 font-semibold"
-                      >
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
-                      </select>
-                    </div>
-
-                    {/* Errors */}
-                    {question.errors.length > 0 && (
-                      <div className="space-y-1">
-                        {question.errors.map((error, i) => (
-                          <div key={i} className="flex items-start text-sm text-red-700">
-                            <svg className="w-4 h-4 mr-1 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                            </svg>
-                            <span>{error.message}</span>
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                          <div>
+                            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                              Option A
+                            </label>
+                            <input
+                              type="text"
+                              value={question.option_a}
+                              onChange={(e) => handleQuestionEdit(originalIndex, 'option_a', e.target.value)}
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                            />
                           </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Warnings */}
-                    {question.warnings.length > 0 && (
-                      <div className="mt-2 space-y-1">
-                        {question.warnings.map((warning, i) => (
-                          <div key={i} className="flex items-start text-sm text-yellow-700">
-                            <svg className="w-4 h-4 mr-1 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            <span>{warning.message}</span>
+                          <div>
+                            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                              Option B
+                            </label>
+                            <input
+                              type="text"
+                              value={question.option_b}
+                              onChange={(e) => handleQuestionEdit(originalIndex, 'option_b', e.target.value)}
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                            />
                           </div>
-                        ))}
+                          <div>
+                            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                              Option C
+                            </label>
+                            <input
+                              type="text"
+                              value={question.option_c}
+                              onChange={(e) => handleQuestionEdit(originalIndex, 'option_c', e.target.value)}
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                              Option D
+                            </label>
+                            <input
+                              type="text"
+                              value={question.option_d}
+                              onChange={(e) => handleQuestionEdit(originalIndex, 'option_d', e.target.value)}
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                            Correct Answer
+                          </label>
+                          <select
+                            value={question.correct_answer}
+                            onChange={(e) => handleQuestionEdit(originalIndex, 'correct_answer', e.target.value)}
+                            className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                          >
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                          </select>
+                        </div>
+
+                        {question.errors.length > 0 && (
+                          <div className="rounded-xl border border-rose-200 bg-rose-50/70 p-3">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-rose-700">Validation issues</div>
+                            <div className="mt-2 space-y-1">
+                              {question.errors.map((error, i) => (
+                                <div key={i} className="flex items-start text-sm text-rose-700">
+                                  <svg className="mr-1 mt-0.5 h-4 w-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                  </svg>
+                                  <span>{error.message}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {question.warnings.length > 0 && (
+                          <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-amber-700">Notes</div>
+                            <div className="mt-2 space-y-1">
+                              {question.warnings.map((warning, i) => (
+                                <div key={i} className="flex items-start text-sm text-amber-700">
+                                  <svg className="mr-1 mt-0.5 h-4 w-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                  </svg>
+                                  <span>{warning.message}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -621,29 +648,17 @@ export default function QuestionImport() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-            <button
-              onClick={handleReset}
-              disabled={isLoading}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+          <div className="flex flex-col gap-3 border-t border-gray-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <Button variant="secondary" onClick={handleReset} disabled={isLoading}>
               Parse New Questions
-            </button>
-            <div className="space-x-3">
-              <button
-                onClick={() => handleSaveQuestions(true)}
-                disabled={isLoading || editingQuestions.filter(q => q.is_valid).length === 0}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+            </Button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button variant="secondary" onClick={() => handleSaveQuestions(true)} disabled={isLoading || editingQuestions.filter(q => q.is_valid).length === 0}>
                 {isLoading ? 'Saving...' : `Save ${editingQuestions.filter(q => q.is_valid).length} Valid`}
-              </button>
-              <button
-                onClick={() => handleSaveQuestions(false)}
-                disabled={isLoading || editingQuestions.length === 0}
-                className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              </Button>
+              <Button variant="primary" onClick={() => handleSaveQuestions(false)} disabled={isLoading || editingQuestions.length === 0}>
                 {isLoading ? 'Saving...' : `Save All ${editingQuestions.length}`}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -671,6 +686,16 @@ export default function QuestionImport() {
           <li>• Separate questions with blank lines</li>
         </ul>
       </div>
+
+      <ConfirmDialog
+        isOpen={pendingDeleteIndex !== null}
+        onClose={() => setPendingDeleteIndex(null)}
+        onConfirm={confirmDeleteQuestion}
+        title="Delete question"
+        message={`Delete question ${editingQuestions[pendingDeleteIndex ?? 0]?.number || ''}? This action cannot be undone.`}
+        confirmText="Delete"
+        confirmVariant="danger"
+      />
 
       {/* Progress Indicator Modal */}
       {saveProgress.show && (

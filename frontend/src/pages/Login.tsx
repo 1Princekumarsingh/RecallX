@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
+import Input from '@/components/common/Input'
+import Button from '@/components/common/Button'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
 
 interface LoginFormData {
   username: string
@@ -18,14 +21,40 @@ interface ApiErrorResponse {
 export default function Login() {
   const navigate = useNavigate()
   const { login, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { addToast } = useToast()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>()
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({ mode: 'onBlur' })
+  const usernameValue = watch('username', '')
+  const usernameInputRef = useRef<HTMLInputElement | null>(null)
+  const { ref, ...usernameRegisterProps } = register('username', {
+    required: 'Username is required',
+    minLength: {
+      value: 1,
+      message: 'Username must be at least 1 character',
+    },
+    maxLength: {
+      value: 50,
+      message: 'Username must be at most 50 characters',
+    },
+    pattern: {
+      value: /^[a-zA-Z0-9_]+$/,
+      message: 'Username can only contain letters, numbers, and underscores',
+    },
+  })
+
+  useEffect(() => {
+    if (errors.username && usernameInputRef.current) {
+      usernameInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      usernameInputRef.current.focus()
+    }
+  }, [errors.username])
 
   if (authLoading) {
     return (
@@ -45,61 +74,57 @@ export default function Login() {
 
     try {
       await login(data.username)
+      addToast({
+        title: 'Welcome back',
+        message: `Signed in as ${data.username}.`,
+        variant: 'success',
+        duration: 3000,
+      })
       navigate('/dashboard')
     } catch (err: unknown) {
       const apiError = err as ApiErrorResponse
-      setError(
+      const message =
         apiError.response?.data?.detail ||
-          'Login failed. Please check your username and try again.'
-      )
+        'Login failed. Please check your username and try again.'
+      setError(message)
+      addToast({ title: 'Login failed', message, variant: 'error', duration: 5000 })
     } finally {
       setIsLoading(false)
     }
   }
 
+  const isUsernameValid = useMemo(() => /^[a-zA-Z0-9_]+$/.test(usernameValue.trim()), [usernameValue])
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 px-4">
-      <div className="max-w-md w-full space-y-8">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-primary-600 mb-2">RecallX</h1>
           <p className="text-gray-600">Exam preparation and active recall learning</p>
         </div>
 
-        <div className="bg-white shadow-xl rounded-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Welcome</h2>
+        <div className="rounded-2xl bg-white p-6 shadow-xl sm:p-8">
+          <h2 className="mb-6 text-2xl font-bold text-gray-900">Welcome</h2>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Username
-              </label>
-              <input
+              <Input
                 id="username"
+                ref={(element) => {
+                  ref(element)
+                  usernameInputRef.current = element
+                }}
+                label="Username"
                 type="text"
                 autoComplete="username"
-                {...register('username', {
-                  required: 'Username is required',
-                  minLength: {
-                    value: 1,
-                    message: 'Username must be at least 1 character',
-                  },
-                  maxLength: {
-                    value: 50,
-                    message: 'Username must be at most 50 characters',
-                  },
-                  pattern: {
-                    value: /^[a-zA-Z0-9_]+$/,
-                    message: 'Username can only contain letters, numbers, and underscores',
-                  },
-                })}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors ${
-                  errors.username ? 'border-red-500' : 'border-gray-300'
-                }`}
+                inputMode="text"
+                {...usernameRegisterProps}
                 placeholder="Enter your username"
+                error={errors.username?.message}
+                success={Boolean(usernameValue.trim()) && !errors.username && isUsernameValid}
+                currentLength={usernameValue.length}
+                maxLength={50}
               />
-              {errors.username && (
-                <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
-              )}
             </div>
 
             {error && (
@@ -108,13 +133,16 @@ export default function Login() {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={isLoading || isSubmitting}
+              disabled={isLoading || isSubmitting}
             >
               {isLoading ? 'Logging in...' : 'Continue'}
-            </button>
+            </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-600">

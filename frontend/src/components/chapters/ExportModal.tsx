@@ -77,7 +77,7 @@ export default function ExportModal({
   ]
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Export Questions - ${chapterName}`} maxWidth="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={`Export Questions - ${chapterName}`} size="lg">
       <div className="space-y-6">
         {/* Export Type Selection */}
         <div>

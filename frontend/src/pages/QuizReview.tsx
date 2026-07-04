@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { QuizState, QuizQuestion } from '@/types/quiz'
 import { quizProgressApi } from '@/api/quiz-progress'
 import { deserializeQuizState } from '@/lib/quizProgress'
+import { Accordion } from '@/components/common'
 
 interface ExtendedQuizQuestion extends QuizQuestion {
   explanation?: string
@@ -62,9 +63,9 @@ export default function QuizReview() {
 
   if (!quizState) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center" role="status" aria-live="polite">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-primary-600"></div>
           <p className="mt-4 text-gray-600">Loading review...</p>
         </div>
       </div>
@@ -87,63 +88,84 @@ export default function QuizReview() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-8 animate-fade-in">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <header className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Answer Review</h1>
-            <p className="mt-1 text-gray-600">
-              Question {reviewIndex + 1} of {quizState.questions.length}
-            </p>
+            <div className="flex items-center space-x-2 mb-2">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Answer Review</h1>
+            <p className="mt-1 text-gray-600">Review your answers and explanations</p>
           </div>
           <button
             onClick={handleBackToResults}
-            className="text-gray-600 hover:text-gray-900"
+            className="rounded-lg p-2 text-gray-600 transition-all duration-200 hover:bg-gray-200 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
             title="Back to Results"
+            aria-label="Close review"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-        </div>
+        </header>
 
         {/* Question Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-          {/* Status Badge */}
-          <div className={`px-6 py-3 border-b ${
+        <section aria-labelledby="review-question-heading" className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+          {/* Status Badge - Enhanced Styling */}
+          <div className={`px-6 py-4 border-b ${
             !isAnswered 
               ? 'bg-yellow-50 border-yellow-200' 
               : isCorrect 
                 ? 'bg-green-50 border-green-200' 
                 : 'bg-red-50 border-red-200'
           }`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+            <div className="flex items-center justify-between flex-col sm:flex-row gap-3">
+              <div className="flex items-center space-x-3">
                 {!isAnswered ? (
                   <>
-                    <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-medium text-yellow-800">Not Answered</span>
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="block font-bold text-yellow-900">Unanswered</span>
+                      <span className="text-sm text-yellow-700">You skipped this question</span>
+                    </div>
                   </>
                 ) : isCorrect ? (
                   <>
-                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-medium text-green-800">Correct Answer</span>
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="block font-bold text-green-900">Correct!</span>
+                      <span className="text-sm text-green-700">Great job on this question</span>
+                    </div>
                   </>
                 ) : (
                   <>
-                    <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-medium text-red-800">Wrong Answer</span>
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="block font-bold text-red-900">Incorrect</span>
+                      <span className="text-sm text-red-700">Review the correct answer below</span>
+                    </div>
                   </>
                 )}
               </div>
-              <span className="text-sm text-gray-600">
+              <span className="text-sm font-medium text-gray-600 bg-white px-3 py-1 rounded-full">
                 Time spent: {currentAnswer.time_spent}s
               </span>
             </div>
@@ -153,7 +175,7 @@ export default function QuizReview() {
           <div className="p-6">
             {/* Question Number and Text */}
             <div className="mb-6">
-              <h2 className="text-sm font-semibold text-gray-500 mb-2">
+              <h2 id="review-question-heading" className="mb-2 text-sm font-semibold text-gray-500">
                 Question {currentQuestion.question_number}
               </h2>
               <p className="text-lg text-gray-900 leading-relaxed">
@@ -184,7 +206,7 @@ export default function QuizReview() {
                   >
                     <div className="flex items-start space-x-3">
                       <div className={`
-                        flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center font-semibold text-sm
+                        flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold
                         ${isCorrectAnswer && isUserAnswer
                           ? 'border-green-600 bg-green-600 text-white'
                           : isCorrectAnswer
@@ -220,74 +242,102 @@ export default function QuizReview() {
             </div>
 
             {/* Explanation Section */}
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Explanation</h3>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-gray-700 leading-relaxed">
-                  The correct answer is <span className="font-semibold">{currentQuestion.correct_answer}</span>.
+            <Accordion 
+              title={
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <span>Explanation</span>
+                </div>
+              }
+              defaultOpen={true}
+              className="mt-6"
+            >
+              <div className="space-y-3">
+                <div className="text-gray-700">
+                  <p className="font-medium mb-2">The correct answer is <span className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded font-semibold">{currentQuestion.correct_answer}</span></p>
+                  
                   {!isAnswered && (
-                    <span className="block mt-2 text-gray-600">You did not answer this question.</span>
+                    <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
+                      <p className="text-sm">You did not answer this question.</p>
+                    </div>
                   )}
+                  
                   {isAnswered && !isCorrect && (
-                    <span className="block mt-2 text-gray-600">
-                      You selected <span className="font-semibold">{currentAnswer.selected_answer}</span>.
-                    </span>
+                    <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800">
+                      <p className="text-sm">You selected <span className="font-semibold inline-block px-2 py-1 bg-red-100 rounded">{currentAnswer.selected_answer}</span></p>
+                    </div>
                   )}
-                </p>
+                </div>
+
                 {currentQuestion.explanation ? (
-                  <p className="mt-2 text-gray-700 font-medium">
-                    {currentQuestion.explanation}
-                  </p>
+                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-gray-700 leading-relaxed">
+                      {currentQuestion.explanation}
+                    </p>
+                  </div>
                 ) : (
-                  <p className="text-sm text-gray-500 mt-2 italic">
-                    No detailed explanation available.
-                  </p>
+                  <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <p className="text-sm text-gray-500 italic">
+                      No detailed explanation available for this question.
+                    </p>
+                  </div>
                 )}
               </div>
-            </div>
+            </Accordion>
           </div>
-        </div>
+        </section>
 
         {/* Navigation Buttons */}
-        <div className="flex items-center justify-between">
+        <nav aria-label="Review navigation" className="mt-8 flex items-center justify-between gap-4">
           <button
             onClick={handlePreviousQuestion}
             disabled={reviewIndex === 0}
-            className={`px-6 py-3 font-medium rounded-lg transition-colors ${
+            className={`flex items-center gap-2 rounded-lg px-6 py-3 font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
               reviewIndex === 0
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+                ? 'cursor-not-allowed bg-gray-100 text-gray-400'
+                : 'border-2 border-gray-300 bg-white text-gray-700 hover:scale-105 hover:bg-gray-50 active:scale-95'
             }`}
           >
-            ← Previous
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Previous
           </button>
 
           <div className="text-center">
-            <div className="text-sm text-gray-600">
-              {reviewIndex + 1} / {quizState.questions.length}
+            <div className="text-sm text-gray-600 font-medium">
+              Question <span className="text-lg font-bold text-gray-900">{reviewIndex + 1}</span> of <span className="font-bold text-gray-900">{quizState.questions.length}</span>
             </div>
           </div>
 
           <button
             onClick={handleNextQuestion}
             disabled={reviewIndex === quizState.questions.length - 1}
-            className={`px-6 py-3 font-medium rounded-lg transition-colors ${
+            className={`flex items-center gap-2 rounded-lg px-6 py-3 font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
               reviewIndex === quizState.questions.length - 1
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-primary-600 text-white hover:bg-primary-700'
+                ? 'cursor-not-allowed bg-gray-100 text-gray-400'
+                : 'bg-primary-600 text-white shadow-md hover:scale-105 hover:bg-primary-700 hover:shadow-lg active:scale-95'
             }`}
           >
-            Next →
+            Next
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </button>
-        </div>
+        </nav>
 
         {/* Back to Results */}
-        <div className="mt-6 text-center">
+        <div className="mt-8 text-center">
           <button
             onClick={handleBackToResults}
-            className="text-primary-600 hover:text-primary-700 font-medium"
+            className="inline-flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-primary-600 transition-all duration-200 hover:bg-blue-50 hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
           >
-            ← Back to Results
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Results
           </button>
         </div>
       </div>

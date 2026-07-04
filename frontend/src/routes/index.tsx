@@ -1,16 +1,22 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from '@/pages/Login'
-import Dashboard from '@/pages/Dashboard'
-import Subjects from '@/pages/Subjects'
-import Chapters from '@/pages/Chapters'
-import QuestionImport from '@/pages/QuestionImport'
-import Quiz from '@/pages/Quiz'
-import QuizResults from '@/pages/QuizResults'
-import QuizReview from '@/pages/QuizReview'
-import History from '@/pages/History'
-import Statistics from '@/pages/Statistics'
 import Layout from '@/components/layout/Layout'
 import ProtectedRoute from '@/components/ProtectedRoute'
+
+const Dashboard = lazy(() => import('@/pages/Dashboard'))
+const Subjects = lazy(() => import('@/pages/Subjects'))
+const Chapters = lazy(() => import('@/pages/Chapters'))
+const QuestionImport = lazy(() => import('@/pages/QuestionImport'))
+const Quiz = lazy(() => import('@/pages/Quiz'))
+const QuizResults = lazy(() => import('@/pages/QuizResults'))
+const QuizReview = lazy(() => import('@/pages/QuizReview'))
+const History = lazy(() => import('@/pages/History'))
+const Statistics = lazy(() => import('@/pages/Statistics'))
+
+function LazyRoute({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Loading...</div>}>{children}</Suspense>
+}
 
 export default function AppRoutes() {
   return (
@@ -22,7 +28,9 @@ export default function AppRoutes() {
         path="/quiz/:chapterId"
         element={
           <ProtectedRoute>
-            <Quiz />
+            <LazyRoute>
+              <Quiz />
+            </LazyRoute>
           </ProtectedRoute>
         }
       />
@@ -32,7 +40,9 @@ export default function AppRoutes() {
         path="/quiz/results/:chapterId"
         element={
           <ProtectedRoute>
-            <QuizResults />
+            <LazyRoute>
+              <QuizResults />
+            </LazyRoute>
           </ProtectedRoute>
         }
       />
@@ -42,7 +52,9 @@ export default function AppRoutes() {
         path="/quiz/review/:chapterId"
         element={
           <ProtectedRoute>
-            <QuizReview />
+            <LazyRoute>
+              <QuizReview />
+            </LazyRoute>
           </ProtectedRoute>
         }
       />
@@ -56,12 +68,12 @@ export default function AppRoutes() {
         }
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="subjects" element={<Subjects />} />
-        <Route path="subjects/:subjectId/chapters" element={<Chapters />} />
-        <Route path="subjects/:subjectId/chapters/:chapterId/import" element={<QuestionImport />} />
-        <Route path="history" element={<History />} />
-        <Route path="statistics" element={<Statistics />} />
+        <Route path="dashboard" element={<LazyRoute><Dashboard /></LazyRoute>} />
+        <Route path="subjects" element={<LazyRoute><Subjects /></LazyRoute>} />
+        <Route path="subjects/:subjectId/chapters" element={<LazyRoute><Chapters /></LazyRoute>} />
+        <Route path="subjects/:subjectId/chapters/:chapterId/import" element={<LazyRoute><QuestionImport /></LazyRoute>} />
+        <Route path="history" element={<LazyRoute><History /></LazyRoute>} />
+        <Route path="statistics" element={<LazyRoute><Statistics /></LazyRoute>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

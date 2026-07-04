@@ -9,14 +9,14 @@ const navigation = [
 
 export default function Sidebar() {
   return (
-    <aside className="w-full md:w-64 bg-white border-b border-gray-200 md:border-r md:border-b-0 md:min-h-[calc(100vh-4rem)]">
-      <nav className="p-4 space-y-1 md:sticky md:top-16">
+    <aside aria-label="Sidebar navigation" className="w-full bg-white border-b border-gray-200 md:w-64 md:min-h-[calc(100vh-4rem)] md:border-r md:border-b-0">
+      <nav aria-label="Primary" className="space-y-1 p-4 md:sticky md:top-16">
         {navigation.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `block px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              `block rounded-lg px-4 py-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
                 isActive
                   ? 'bg-primary-50 text-primary-700'
                   : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'

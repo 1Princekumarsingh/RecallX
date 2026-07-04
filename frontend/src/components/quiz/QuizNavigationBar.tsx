@@ -1,6 +1,7 @@
 interface QuizNavigationBarProps {
   currentIndex: number
   totalQuestions: number
+  answeredCount: number
   isAnswered: boolean
   isBookmarked: boolean
   canGoPrevious: boolean
@@ -15,7 +16,7 @@ interface QuizNavigationBarProps {
 export default function QuizNavigationBar({
   currentIndex,
   totalQuestions,
-  isAnswered,
+  answeredCount,
   isBookmarked,
   canGoPrevious,
   canGoNext,
@@ -25,54 +26,52 @@ export default function QuizNavigationBar({
   onTogglePalette,
   onSubmit
 }: QuizNavigationBarProps) {
+  const completionPercent = totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0
+
   return (
-    <div className="bg-white border-t border-gray-200 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="border-t border-slate-200 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.06)]">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <button
             onClick={onPrevious}
             disabled={!canGoPrevious}
-            className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            <span className="hidden sm:inline">Previous</span>
+            <span>Previous</span>
           </button>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
-            <div className="flex items-center justify-center">
-              <button
-                onClick={onToggleBookmark}
-                className={`p-2 rounded-lg border-2 transition-all ${
-                  isBookmarked
-                    ? 'bg-purple-100 border-purple-500 text-purple-700'
-                    : 'border-gray-300 text-gray-600 hover:bg-gray-50'
-                }`}
-                title={isBookmarked ? 'Remove bookmark' : 'Mark for review'}
-              >
-                <svg className="w-5 h-5" fill={isBookmarked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                </svg>
-              </button>
-            </div>
+            <button
+              onClick={onToggleBookmark}
+              className={`inline-flex min-h-[44px] items-center justify-center rounded-xl border-2 px-3 py-2 transition-all ${
+                isBookmarked
+                  ? 'border-violet-500 bg-violet-50 text-violet-700'
+                  : 'border-slate-300 text-slate-600 hover:bg-slate-50'
+              }`}
+              title={isBookmarked ? 'Remove bookmark' : 'Mark for review'}
+            >
+              <svg className="h-5 w-5" fill={isBookmarked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            </button>
 
             <button
               onClick={onTogglePalette}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
               title="View question palette"
             >
-              <div className="flex items-center justify-center space-x-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-                <span className="hidden md:inline">Palette</span>
-              </div>
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+              <span>Palette</span>
             </button>
 
             <button
               onClick={onSubmit}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
             >
               Submit Quiz
             </button>
@@ -81,34 +80,22 @@ export default function QuizNavigationBar({
           <button
             onClick={onNext}
             disabled={!canGoNext}
-            className="flex items-center justify-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <span className="hidden sm:inline">
-              {currentIndex === totalQuestions - 1 ? 'Submit' : 'Next'}
-            </span>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span>{currentIndex === totalQuestions - 1 ? 'Submit' : 'Next'}</span>
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
         </div>
 
-        {/* Progress Bar */}
         <div className="mt-4">
-          <div className="flex justify-between text-xs text-gray-600 mb-1">
+          <div className="mb-1 flex items-center justify-between text-xs font-medium text-slate-600">
             <span>Question {currentIndex + 1} of {totalQuestions}</span>
-            <span>
-              {isAnswered ? (
-                <span className="text-green-600 font-medium">✓ Answered</span>
-              ) : (
-                <span className="text-gray-500">Not answered</span>
-              )}
-            </span>
+            <span>{answeredCount}/{totalQuestions} answered • {completionPercent}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-primary-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${((currentIndex + 1) / totalQuestions) * 100}%` }}
-            ></div>
+          <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
+            <div className="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-300" style={{ width: `${Math.min((currentIndex + 1) / totalQuestions * 100, 100)}%` }}></div>
           </div>
         </div>
       </div>

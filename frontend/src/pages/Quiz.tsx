@@ -1,9 +1,15 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { questionsApi } from '@/api/questions'
 import { quizProgressApi } from '@/api/quiz-progress'
 import { useQuizState } from '@/hooks/useQuizState'
+import { useSwipeGesture } from '@/hooks/useSwipeGesture'
+import { useDebounceClick } from '@/hooks/useDebounceClick'
+import { useLongPress } from '@/hooks/useLongPress'
+import { usePullToRefresh } from '@/hooks/usePullToRefresh'
+import { triggerHaptic } from '@/lib/haptics'
+import { isMobileViewport } from '@/lib/viewport'
 import { QuizConfig, ConfidenceLevel, TimerMode, QuizQuestion } from '@/types/quiz'
 import { QuizProgress, QuizProgressCreate, QuizProgressUpdate } from '@/types/quiz-progress'
 import { QuestionStatus } from '@/types/question'
@@ -80,7 +86,7 @@ export default function Quiz() {
 
   if (isLoading || isProgressLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen animate-fade-in">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading quiz...</p>
@@ -91,12 +97,12 @@ export default function Quiz() {
 
   if (isExplicitSessionKey && progressError) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen animate-fade-in">
         <div className="text-center">
           <p className="text-gray-600 mb-4">Unable to resume quiz session. Please start a new quiz.</p>
           <button
             onClick={() => navigate(`/chapters/${chapterId}`)}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-150 hover:scale-105 active:scale-95"
           >
             Go Back
           </button>
@@ -107,12 +113,12 @@ export default function Quiz() {
 
   if (!questionsData || questionsData.data.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen animate-fade-in">
         <div className="text-center">
           <p className="text-gray-600">No questions available for this quiz.</p>
           <button
             onClick={() => navigate(-1)}
-            className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-150 hover:scale-105 active:scale-95"
           >
             Go Back
           </button>
@@ -154,6 +160,7 @@ function QuizSession({ config, chapterId, questions, totalQuestionCount, session
   const [showFeedback, setShowFeedback] = useState(false)
   const [isExplanationOpen, setIsExplanationOpen] = useState(false)
   const [statusUpdateError, setStatusUpdateError] = useState<string | null>(null)
+  const debounceClick = useDebounceClick()
   const restoredQuizState = useMemo(
     () => progressData ? deserializeQuizState(progressData.state) : undefined,
     [progressData]
@@ -341,13 +348,57 @@ function QuizSession({ config, chapterId, questions, totalQuestionCount, session
   const canAdvanceOrSubmit = config.mode !== 'practice' || showFeedback
 
   const handleSelectAnswer = (answer: string | null) => {
-    actions.selectAnswer(currentQuestion.id, answer)
-    
-    // Show feedback immediately in Practice Mode
-    if (config.mode === 'practice' && answer) {
-      setShowFeedback(true)
-    }
+    debounceClick(() => {
+      actions.selectAnswer(currentQuestion.id, answer)
+      triggerHaptic(answer ? 'light' : 'warning')
+      
+      // Show feedback immediately in Practice Mode
+      if (config.mode === 'practice' && answer) {
+        setShowFeedback(true)
+        triggerHaptic('success')
+      }
+    })
   }
+
+  const queryClient = useQueryClient()
+  const [showLongPressHint, setShowLongPressHint] = useState(false)
+
+  const { onTouchStart, onTouchMove, onTouchEnd } = useSwipeGesture({
+    onSwipeLeft: () => {
+      if (isLastQuestion) {
+        handleSubmitQuiz()
+      } else {
+        actions.nextQuestion()
+        triggerHaptic('light')
+      }
+    },
+    onSwipeRight: () => {
+      actions.previousQuestion()
+      triggerHaptic('light')
+    }
+  })
+
+  const refreshQuiz = useCallback(async () => {
+    await new Promise(resolve => setTimeout(resolve, 600))
+    queryClient.invalidateQueries({ queryKey: ['questions', chapterId] })
+    setShowLongPressHint(true)
+    window.setTimeout(() => setShowLongPressHint(false), 2000)
+  }, [chapterId, queryClient])
+
+  const { isReadyToRefresh, isRefreshing, transformStyle, onTouchStart: onPullStart, onTouchMove: onPullMove, onTouchEnd: onPullEnd, onTouchCancel: onPullCancel } = usePullToRefresh({
+    onRefresh: refreshQuiz,
+    threshold: 80,
+    disabled: !isMobileViewport()
+  })
+
+  const longPressHandlers = useLongPress({
+    onLongPress: () => {
+      setShowPalette(true)
+      triggerHaptic('medium')
+    },
+    onClick: () => {},
+    delay: 500
+  })
 
   const handleExit = () => {
     navigate(-1)
@@ -420,41 +471,78 @@ function QuizSession({ config, chapterId, questions, totalQuestionCount, session
       />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto pb-32 lg:pb-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="flex-1 overflow-auto bg-slate-50 pb-32 lg:pb-0">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {/* Question Area */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                {/* Question Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Question {currentQuestion.question_number}
-                  </h2>
+              <div
+                className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6 touch-manipulation select-none-safe"
+                style={transformStyle}
+                onTouchStart={(event) => {
+                  longPressHandlers.onTouchStart(event)
+                  onPullStart(event)
+                  onTouchStart(event)
+                }}
+                onTouchMove={(event) => {
+                  longPressHandlers.onTouchMove?.()
+                  onPullMove(event)
+                  onTouchMove(event)
+                }}
+                onTouchEnd={(event) => {
+                  longPressHandlers.onTouchEnd(event)
+                  onPullEnd()
+                  onTouchEnd(event)
+                }}
+                onTouchCancel={() => {
+                  longPressHandlers.onTouchCancel?.()
+                  onPullCancel()
+                }}
+              >
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold uppercase tracking-wide text-slate-500">Current question</div>
+                    <h2 className="text-xl font-semibold text-slate-900">
+                      {currentQuestion.question_number}. {currentQuestion.question_text}
+                    </h2>
+                    <p className="mt-1 text-xs text-slate-500">Long press the question card to open the palette on mobile.</p>
+                  </div>
                   <button
-                    onClick={() => actions.toggleBookmark(currentQuestion.id)}
-                    className={`p-2 rounded-lg transition-colors ${
+                    onClick={() => {
+                      debounceClick(() => {
+                        actions.toggleBookmark(currentQuestion.id)
+                        triggerHaptic('light')
+                      })
+                    }}
+                    className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition-colors ${
                       currentAnswer.is_bookmarked
-                        ? 'text-purple-600 hover:bg-purple-50'
-                        : 'text-gray-400 hover:bg-gray-50'
+                        ? 'border-violet-200 bg-violet-50 text-violet-700'
+                        : 'border-slate-200 text-slate-500 hover:bg-slate-50'
                     }`}
                     title={currentAnswer.is_bookmarked ? 'Remove bookmark' : 'Bookmark this question'}
                   >
-                    <svg className="w-6 h-6" fill={currentAnswer.is_bookmarked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5" fill={currentAnswer.is_bookmarked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                     </svg>
                   </button>
                 </div>
 
-                {/* Question Text */}
-                <div className="mb-6">
-                  <p className="text-lg text-gray-900 leading-relaxed">
-                    {currentQuestion.question_text}
-                  </p>
+                <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50/80 p-3 text-sm text-slate-600">
+                  <p>Swipe left or right to move between questions on mobile.</p>
+                  <p className="mt-1 text-xs text-slate-500">Pull down to refresh questions and long press to open the palette.</p>
                 </div>
 
-                {/* Options */}
                 <div className="space-y-3">
+                  {isRefreshing && (
+                    <div className="rounded-2xl border border-primary-200 bg-primary-50 p-3 text-sm text-primary-700 transition-all duration-200">
+                      Refreshing questions...
+                    </div>
+                  )}
+                  {isReadyToRefresh && !isRefreshing && (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-100 p-3 text-sm text-slate-700 transition-all duration-200">
+                      Release to refresh
+                    </div>
+                  )}
                   {options.map((option) => {
                     const isSelected = currentAnswer.selected_answer === option.key
                     const isCorrect = option.key === currentQuestion.correct_answer
@@ -498,21 +586,14 @@ function QuizSession({ config, chapterId, questions, totalQuestionCount, session
                         key={option.key}
                         onClick={() => handleSelectAnswer(option.key)}
                         disabled={shouldShowFeedback}
-                        className={`
-                          w-full text-left p-4 rounded-lg border-2 transition-all
-                          ${optionStyle}
-                          ${shouldShowFeedback ? 'cursor-default' : 'cursor-pointer'}
-                        `}
+                        className={`w-full min-h-[56px] rounded-2xl border-2 p-4 text-left transition-all duration-200 ${optionStyle} ${shouldShowFeedback ? 'cursor-default' : 'cursor-pointer'}`}
                       >
-                        <div className="flex items-start space-x-3">
-                          <div className={`
-                            flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center font-semibold text-sm
-                            ${circleStyle}
-                          `}>
+                        <div className="flex items-start gap-3">
+                          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold ${circleStyle}`}>
                             {option.key}
                           </div>
-                          <div className="flex-1 pt-1">
-                            <p className="text-gray-900">{option.text}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-base leading-6 text-slate-900">{option.text}</p>
                             {shouldShowFeedback && (
                               <div className="mt-2">
                                 {isCorrect && isSelected && (
@@ -547,11 +628,16 @@ function QuizSession({ config, chapterId, questions, totalQuestionCount, session
 
                 {/* Collapsible Explanation Box */}
                 {config.mode === 'practice' && showFeedback && currentQuestion.explanation && (
-                  <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden bg-white">
+                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
                     <button
                       type="button"
-                      onClick={() => setIsExplanationOpen(!isExplanationOpen)}
-                      className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors font-medium text-gray-700 text-sm"
+                      onClick={() => {
+                        debounceClick(() => {
+                          setIsExplanationOpen(!isExplanationOpen)
+                          triggerHaptic('light')
+                        })
+                      }}
+                      className="flex w-full items-center justify-between bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100"
                     >
                       <span>Explanation</span>
                       <svg
@@ -564,7 +650,7 @@ function QuizSession({ config, chapterId, questions, totalQuestionCount, session
                       </svg>
                     </button>
                     {isExplanationOpen && (
-                      <div className="p-4 border-t border-gray-200 text-gray-700 text-sm leading-relaxed bg-white">
+                      <div className="border-t border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700">
                         {currentQuestion.explanation}
                       </div>
                     )}
@@ -575,7 +661,7 @@ function QuizSession({ config, chapterId, questions, totalQuestionCount, session
                 {currentAnswer.selected_answer && !showFeedback && (
                   <button
                     onClick={() => handleSelectAnswer(null)}
-                    className="mt-4 text-sm text-red-600 hover:text-red-700 font-medium"
+                    className="mt-4 text-sm font-semibold text-rose-600 transition-colors hover:text-rose-700"
                   >
                     Clear Answer
                   </button>
@@ -583,8 +669,8 @@ function QuizSession({ config, chapterId, questions, totalQuestionCount, session
 
                 {/* Confidence Buttons - Only in Practice Mode with Feedback */}
                 {config.mode === 'practice' && showFeedback && currentAnswer.selected_answer !== null && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                  <div className="mt-6 border-t border-slate-200 pt-6">
+                    <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600">
                       How confident are you with this answer?
                     </h3>
                     
@@ -619,7 +705,12 @@ function QuizSession({ config, chapterId, questions, totalQuestionCount, session
                     
                     <div className="flex flex-col sm:flex-row gap-3">
                       <button
-                        onClick={() => handleConfidenceSelect('mastered')}
+                        onClick={() => {
+                          debounceClick(() => {
+                            handleConfidenceSelect('mastered')
+                            triggerHaptic('success')
+                          })
+                        }}
                         disabled={statusMutation.isPending}
                         className={`flex-1 px-4 py-3 rounded-lg border-2 font-medium transition-all ${
                           currentAnswer.confidence_level === 'mastered'
@@ -645,7 +736,12 @@ function QuizSession({ config, chapterId, questions, totalQuestionCount, session
                       </button>
                       
                       <button
-                        onClick={() => handleConfidenceSelect('review')}
+                        onClick={() => {
+                          debounceClick(() => {
+                            handleConfidenceSelect('review')
+                            triggerHaptic('light')
+                          })
+                        }}
                         disabled={statusMutation.isPending}
                         className={`flex-1 px-4 py-3 rounded-lg border-2 font-medium transition-all ${
                           currentAnswer.confidence_level === 'review'
@@ -671,7 +767,12 @@ function QuizSession({ config, chapterId, questions, totalQuestionCount, session
                       </button>
                       
                       <button
-                        onClick={() => handleConfidenceSelect('almost_forgot')}
+                        onClick={() => {
+                          debounceClick(() => {
+                            handleConfidenceSelect('almost_forgot')
+                            triggerHaptic('warning')
+                          })
+                        }}
                         disabled={statusMutation.isPending}
                         className={`flex-1 px-4 py-3 rounded-lg border-2 font-medium transition-all ${
                           currentAnswer.confidence_level === 'almost_forgot'
@@ -711,6 +812,12 @@ function QuizSession({ config, chapterId, questions, totalQuestionCount, session
               </div>
             </div>
           </div>
+
+          {showLongPressHint && (
+            <div className="fixed bottom-24 left-1/2 z-50 w-[calc(100vw-2rem)] -translate-x-1/2 rounded-2xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg shadow-slate-900/20 transition-all duration-200">
+              Long press the screen to open the question palette.
+            </div>
+          )}
         </div>
       </div>
 
@@ -719,6 +826,7 @@ function QuizSession({ config, chapterId, questions, totalQuestionCount, session
         <QuizNavigationBar
           currentIndex={state.current_question_index}
           totalQuestions={state.questions.length}
+          answeredCount={Array.from(state.answers.values()).filter((answer) => answer.selected_answer !== null).length}
           isAnswered={currentAnswer.selected_answer !== null}
           isBookmarked={currentAnswer.is_bookmarked}
           canGoPrevious={state.current_question_index > 0}

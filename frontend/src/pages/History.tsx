@@ -31,7 +31,10 @@ export default function History() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Attempt History</h1>
+      <header className="space-y-2">
+        <h1 className="text-3xl font-bold text-gray-900">Attempt History</h1>
+        <p className="text-sm text-gray-600">Review your recent quiz sessions and outcomes.</p>
+      </header>
 
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -42,7 +45,7 @@ export default function History() {
           <p className="text-gray-500">No quiz attempts yet. Start practicing to see your history here.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
