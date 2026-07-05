@@ -475,9 +475,9 @@ function QuizSession({ config, chapterId, questions, totalQuestionCount, session
       {/* Main Content */}
       <div className="flex-1 overflow-auto bg-slate-50 pb-32 lg:pb-0">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3 lg:gap-8">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-4 lg:gap-6">
             {/* Question Area */}
-            <div className="lg:col-span-2 lg:max-w-[800px] lg:justify-self-center">
+            <div className="lg:col-span-3 lg:max-w-none lg:justify-self-stretch">
               <div
                 className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6 md:p-7 lg:p-8 touch-manipulation select-none-safe max-h-[calc(100vh-16rem)] overflow-y-auto"
                 style={transformStyle}

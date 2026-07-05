@@ -38,9 +38,9 @@ export default function QuestionPalette({ state, onQuestionSelect, onClose }: Qu
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-lg">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">Question Palette</h3>
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-base font-semibold text-slate-900">Question Palette</h3>
         {onClose && (
           <button
             onClick={onClose}
@@ -53,14 +53,14 @@ export default function QuestionPalette({ state, onQuestionSelect, onClose }: Qu
         )}
       </div>
 
-      <div className="mb-4 hidden gap-2 text-sm text-slate-600 sm:grid sm:grid-cols-2">
-        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full border border-emerald-300 bg-emerald-100"></div><span>Answered</span></div>
-        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full border border-violet-300 bg-violet-100"></div><span>Marked</span></div>
-        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full border border-rose-300 bg-rose-100"></div><span>Not answered</span></div>
-        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full border border-slate-300 bg-slate-100"></div><span>Not visited</span></div>
+      <div className="mb-3 hidden gap-2 text-xs text-slate-600 sm:grid sm:grid-cols-2">
+        <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full border border-emerald-300 bg-emerald-100"></div><span>Answered</span></div>
+        <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full border border-violet-300 bg-violet-100"></div><span>Marked</span></div>
+        <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full border border-rose-300 bg-rose-100"></div><span>Not answered</span></div>
+        <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full border border-slate-300 bg-slate-100"></div><span>Not visited</span></div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2 sm:grid sm:grid-cols-4 sm:gap-2 lg:grid-cols-5">
+      <div className="flex gap-1.5 overflow-x-auto pb-2 sm:grid sm:grid-cols-4 sm:gap-1.5 lg:grid-cols-5">
         {state.questions.map((question, index) => {
           const status = getQuestionStatus(index)
           const isCurrent = index === state.current_question_index
@@ -69,7 +69,7 @@ export default function QuestionPalette({ state, onQuestionSelect, onClose }: Qu
             <button
               key={question.id}
               onClick={() => onQuestionSelect(index)}
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 text-sm font-semibold transition-all duration-200 sm:h-12 sm:w-full sm:min-h-[44px] ${getStatusColor(status, isCurrent)} ${isCurrent ? 'ring-2 ring-primary-300 ring-offset-2' : ''}`}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border-2 text-sm font-semibold transition-all duration-200 sm:h-10 sm:w-full sm:min-h-[40px] ${getStatusColor(status, isCurrent)} ${isCurrent ? 'ring-2 ring-primary-300 ring-offset-1' : ''}`}
               title={`Question ${question.question_number}`}
             >
               {question.question_number}
@@ -78,7 +78,7 @@ export default function QuestionPalette({ state, onQuestionSelect, onClose }: Qu
         })}
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 border-t border-slate-200 pt-4 text-sm">
+      <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3 text-xs">
         <div className="flex justify-between">
           <span className="text-slate-600">Total:</span>
           <span className="font-semibold text-slate-900">{state.questions.length}</span>
