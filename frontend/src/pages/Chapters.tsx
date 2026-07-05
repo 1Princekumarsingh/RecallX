@@ -204,7 +204,7 @@ export default function Chapters() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6">
+    <div className="w-full space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
