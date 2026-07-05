@@ -8,6 +8,7 @@ from app.models.subject import Subject
 from app.models.chapter import Chapter
 from app.models.question import Question, QuestionStatus
 from app.models.quiz_attempt import QuizAttempt
+from app.models.quiz_progress import QuizProgress
 from app.schemas.statistics import DashboardStats, ChapterStats
 
 router = APIRouter(prefix="/statistics", tags=["statistics"])
@@ -63,13 +64,24 @@ def get_dashboard_statistics(
     last_attempt = db.query(QuizAttempt).filter(
         QuizAttempt.user_id == current_user.id
     ).order_by(QuizAttempt.quiz_date.desc()).first()
+
+    last_progress = db.query(QuizProgress).filter(
+        QuizProgress.user_id == current_user.id,
+        QuizProgress.is_completed.is_(False)
+    ).order_by(QuizProgress.updated_at.desc()).first()
     
     last_chapter_id = None
     last_subject_id = None
     last_chapter_name = None
+    last_session_key = None
     
-    if last_attempt:
+    if last_progress:
+        last_chapter_id = last_progress.chapter_id
+        last_session_key = last_progress.session_key
+    elif last_attempt:
         last_chapter_id = last_attempt.chapter_id
+    
+    if last_chapter_id is not None:
         chapter = db.query(Chapter).filter(Chapter.id == last_chapter_id).first()
         if chapter:
             last_subject_id = chapter.subject_id
@@ -83,7 +95,8 @@ def get_dashboard_statistics(
         "errors": errors,
         "last_chapter_id": last_chapter_id,
         "last_subject_id": last_subject_id,
-        "last_chapter_name": last_chapter_name
+        "last_chapter_name": last_chapter_name,
+        "last_session_key": last_session_key
     }
 
 

@@ -9,6 +9,7 @@ export interface DashboardStats {
   last_chapter_id?: number
   last_subject_id?: number
   last_chapter_name?: string
+  last_session_key?: string
 }
 
 export interface ChapterStats {

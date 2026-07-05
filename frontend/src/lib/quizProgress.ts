@@ -23,7 +23,9 @@ export function deserializeQuizState(raw: any): QuizState {
   const answers = new Map<number, QuizAnswer>()
   if (raw?.answers && typeof raw.answers === 'object') {
     for (const [key, value] of Object.entries(raw.answers)) {
-      answers.set(Number(key), value as QuizAnswer)
+      if (value && typeof value === 'object') {
+        answers.set(Number(key), value as QuizAnswer)
+      }
     }
   }
 

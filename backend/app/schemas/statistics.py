@@ -11,6 +11,7 @@ class DashboardStats(BaseModel):
     last_chapter_id: Optional[int] = None
     last_subject_id: Optional[int] = None
     last_chapter_name: Optional[str] = None
+    last_session_key: Optional[str] = None
 
 
 class ChapterStats(BaseModel):

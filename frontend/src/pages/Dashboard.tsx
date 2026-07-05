@@ -44,7 +44,9 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <Link
-                  to={`/quiz/${stats.last_chapter_id}`}
+                  to={stats.last_session_key
+                    ? `/quiz/${stats.last_chapter_id}?session_key=${encodeURIComponent(stats.last_session_key)}`
+                    : `/quiz/${stats.last_chapter_id}`}
                   className="mt-4 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 md:mt-0"
                 >
                   Continue Chapter

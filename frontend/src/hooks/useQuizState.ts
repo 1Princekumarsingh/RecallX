@@ -35,11 +35,33 @@ function normalizeState(state: QuizState, config: QuizConfig, questions: QuizQue
     ? Math.min(Math.max(state.current_question_index, 0), maxIndex)
     : 0
 
+  const normalizedConfig = state.config ? { ...config, ...state.config } : config
+  const normalizedAnswers = state.answers instanceof Map
+    ? new Map(state.answers)
+    : new Map<number, QuizAnswer>()
+
+  normalizedQuestions.forEach(question => {
+    if (!normalizedAnswers.has(question.id)) {
+      normalizedAnswers.set(question.id, {
+        question_id: question.id,
+        selected_answer: null,
+        time_spent: 0,
+        is_bookmarked: false,
+        is_visited: false
+      })
+    }
+  })
+
   return {
     ...state,
-    config: state.config ?? config,
+    config: normalizedConfig,
     questions: normalizedQuestions,
-    current_question_index: currentIndex
+    answers: normalizedAnswers,
+    current_question_index: currentIndex,
+    start_time: typeof state.start_time === 'number' ? state.start_time : Date.now(),
+    elapsed_time: typeof state.elapsed_time === 'number' ? state.elapsed_time : 0,
+    is_paused: !!state.is_paused,
+    is_completed: !!state.is_completed
   }
 }
 
