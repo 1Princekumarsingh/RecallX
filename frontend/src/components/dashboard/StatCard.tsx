@@ -114,35 +114,35 @@ export default function StatCard({
 
   return (
     <article
-      className={`group rounded-2xl border p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg md:p-7 ${accentStyles[accent].card} ${className}`.trim()}
+      className={`group rounded-2xl border p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${accentStyles[accent].card} ${className}`.trim()}
       title={tooltip}
       aria-label={`${title}: ${resolvedValue}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 md:text-base">{title}</p>
-          <p className="mt-3 text-4xl font-bold text-slate-900 md:text-5xl">{resolvedValue}</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{title}</p>
+          <p className="mt-2 text-3xl font-bold text-slate-900 sm:text-4xl">{resolvedValue}</p>
         </div>
-        <div className={`flex h-14 w-14 items-center justify-center rounded-2xl md:h-16 md:w-16 ${accentStyles[accent].icon}`}>{icon}</div>
+        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${accentStyles[accent].icon}`}>{icon}</div>
       </div>
 
-      {subtitle ? <p className="mt-4 text-sm text-slate-600 md:text-base">{subtitle}</p> : null}
+      {subtitle ? <p className="mt-3 text-sm text-slate-600">{subtitle}</p> : null}
 
       {safeProgress !== undefined ? (
-        <div className="mt-5">
-          <div className="mb-2 flex items-center justify-between text-sm text-slate-600 md:text-base">
+        <div className="mt-4">
+          <div className="mb-2 flex items-center justify-between text-sm text-slate-600">
             <span>{progressLabel ?? 'Progress'}</span>
             <span className="font-semibold text-slate-700">{Math.round(safeProgress)}%</span>
           </div>
-          <div className={`h-3 overflow-hidden rounded-full ${accentStyles[accent].track}`}>
+          <div className={`h-2.5 overflow-hidden rounded-full ${accentStyles[accent].track}`}>
             <div className={`h-full rounded-full transition-all duration-500 ${accentStyles[accent].fill}`} style={{ width: `${safeProgress}%` }} />
           </div>
         </div>
       ) : null}
 
       {trend ? (
-        <div className="mt-5 flex items-center gap-2 text-sm font-medium text-slate-600 md:text-base">
-          <span className="text-base md:text-lg" aria-hidden="true">{trendIcons[trend.direction]}</span>
+        <div className="mt-4 flex items-center gap-2 text-sm font-medium text-slate-600">
+          <span className="text-base" aria-hidden="true">{trendIcons[trend.direction]}</span>
           <span>{trend.label}</span>
         </div>
       ) : null}
