@@ -62,7 +62,7 @@ export default function ChapterCard({ chapter, progress, onEdit, onDelete, onImp
       hoverable
       className="group h-full border border-slate-200/80 bg-white/90 p-3 shadow-sm transition-all duration-200 sm:p-4 md:p-3 lg:p-4"
     >
-      <div className="flex flex-col gap-3 md:hidden">
+      <div className="flex flex-col gap-3 lg:hidden">
         <ResponsiveMedia
           src="/illustrations/chapter-study.svg"
           src2x="/illustrations/chapter-study.svg"
@@ -193,6 +193,90 @@ export default function ChapterCard({ chapter, progress, onEdit, onDelete, onImp
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <span>Created {formatDate(chapter.created_at)}</span>
+        </div>
+      </div>
+
+      <div className="hidden flex-col gap-3 md:flex lg:hidden">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="truncate text-base font-semibold leading-tight text-slate-900">{chapter.name}</h3>
+              <span className={`flex-shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${statusConfig.classes}`}>
+                {statusConfig.label}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-slate-600">
+              {chapter.question_count} questions • {chapter.completed_count} completed
+            </p>
+          </div>
+          <div className="flex flex-shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={handleEdit}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-colors hover:border-primary-300 hover:text-primary-600"
+              aria-label="Edit chapter"
+              title="Edit chapter"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-colors hover:border-rose-200 hover:text-rose-600"
+              aria-label="Delete chapter"
+              title="Delete chapter"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-slate-200/80 bg-slate-50/80 p-2">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <span>Progress</span>
+            <span>{progressPercent}%</span>
+          </div>
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
+            <div className="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-600" style={{ width: `${progressPercent}%` }} />
+          </div>
+        </div>
+
+        <div className="flex gap-1">
+          {chapter.question_count > 0 && (
+            <button
+              type="button"
+              onClick={() => onStartQuiz(chapter)}
+              className="flex-1 rounded-lg bg-emerald-600 px-2 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-emerald-700"
+              title="Start quiz"
+            >
+              Start
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onImport(chapter)}
+            className="flex-1 rounded-lg bg-primary-600 px-2 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-700"
+            title="Import questions"
+          >
+            Import
+          </button>
+          {chapter.question_count > 0 && (
+            <button
+              type="button"
+              onClick={handleExport}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-colors hover:border-emerald-200 hover:text-emerald-600"
+              aria-label="Export questions"
+              title="Export questions"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
