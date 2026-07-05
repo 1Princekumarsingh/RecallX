@@ -60,7 +60,7 @@ export default function QuestionPalette({ state, onQuestionSelect, onClose }: Qu
         <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full border border-slate-300 bg-slate-100"></div><span>Not visited</span></div>
       </div>
 
-      <div className="flex gap-1.5 overflow-x-auto pb-2 sm:grid sm:grid-cols-4 sm:gap-1.5 lg:grid-cols-5">
+      <div className="flex gap-1.5 overflow-x-auto pb-2 sm:grid sm:grid-cols-3 sm:gap-1.5 lg:grid-cols-4 xl:grid-cols-5">
         {state.questions.map((question, index) => {
           const status = getQuestionStatus(index)
           const isCurrent = index === state.current_question_index
