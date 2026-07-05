@@ -3,7 +3,10 @@ interface ReviewExplanationProps {
 }
 
 export default function ReviewExplanation({ explanation }: ReviewExplanationProps) {
-  if (!explanation) {
+  // Treat empty strings and whitespace-only strings as no explanation
+  const hasExplanation = explanation && explanation.trim().length > 0
+  
+  if (!hasExplanation) {
     return null
   }
 

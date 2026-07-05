@@ -4,7 +4,10 @@ interface PracticeFeedbackExplanationProps {
 }
 
 export default function PracticeFeedbackExplanation({ visible, explanation }: PracticeFeedbackExplanationProps) {
-  if (!visible || !explanation) {
+  // Treat empty strings and whitespace-only strings as no explanation
+  const hasExplanation = explanation && explanation.trim().length > 0
+  
+  if (!visible || !hasExplanation) {
     return null
   }
 
