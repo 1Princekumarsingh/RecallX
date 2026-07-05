@@ -236,6 +236,7 @@ class QuestionParser:
                 self.current_line += 1
                 continue
 
+            # Check if we've hit the next question
             if self.QUESTION_NUMBER_PATTERN.match(line):
                 break
 
@@ -254,6 +255,7 @@ class QuestionParser:
                 explanation_lines = [explanation_text]
                 self.current_line += 1
 
+                # Continue reading lines until next question or EOF
                 while self.current_line < len(self.lines):
                     next_line = self.lines[self.current_line].strip()
 
@@ -275,8 +277,9 @@ class QuestionParser:
                         line=self.current_line + 1
                     ))
                 break
-
-            break
+            else:
+                # Line is not an explanation, stop looking for explanation
+                break
         
         # Create parsed question
         return ParsedQuestion(
