@@ -11,7 +11,7 @@ Explanations provide additional context, reasoning, or teaching content that hel
 
 ## Glossary
 
-- **System**: The Kinda Quiz application (backend and frontend components)
+- **System**: The RecallX application (backend and frontend components)
 - **Parser**: The backend text and DOCX parsing utility that extracts questions from input files
 - **Question**: A quiz question entity containing question text, four options (A, B, C, D), correct answer, and optional explanation
 - **Explanation**: Optional text that provides context, reasoning, or teaching content for why an answer is correct

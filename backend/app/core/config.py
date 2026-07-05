@@ -42,7 +42,7 @@ class Settings(BaseSettings):
       - http://localhost        (nginx/docker)
     
     Production Example (Vercel + Render):
-      - https://kinda-quiz.vercel.app      (frontend)
+      - https://recallx.vercel.app      (frontend)
       - http://localhost:5173              (for testing)
       - http://localhost                   (for docker-compose)
     
