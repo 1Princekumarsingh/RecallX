@@ -6,6 +6,7 @@ import SubjectCard from '@/components/subjects/SubjectCard'
 import SubjectFormModal from '@/components/subjects/SubjectFormModal'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import { ResponsiveGrid, PhoneFrame } from '@/components/layout'
+import { Container } from '@/components/layout/Container'
 
 export default function Subjects() {
   const queryClient = useQueryClient()
@@ -76,20 +77,23 @@ export default function Subjects() {
 
   if (error) {
     return (
-      <PhoneFrame>
-        <div className="space-y-6">
-          <h1 className="text-3xl font-bold text-gray-900">Subjects</h1>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800">Error loading subjects. Please try again.</p>
+      <Container size="xl" className="py-1">
+        <PhoneFrame>
+          <div className="space-y-6">
+            <h1 className="text-3xl font-bold text-gray-900">Subjects</h1>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-800">Error loading subjects. Please try again.</p>
+            </div>
           </div>
-        </div>
-      </PhoneFrame>
+        </PhoneFrame>
+      </Container>
     )
   }
 
   return (
-    <PhoneFrame>
-      <div className="mx-auto w-full max-w-6xl space-y-6">
+    <Container size="xl" className="py-1">
+      <PhoneFrame>
+        <div className="mx-auto w-full max-w-6xl space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Subjects</h1>
@@ -204,6 +208,7 @@ export default function Subjects() {
         isLoading={deleteMutation.isPending}
       />
     </div>
-  </PhoneFrame>
+      </PhoneFrame>
+    </Container>
   )
 }
