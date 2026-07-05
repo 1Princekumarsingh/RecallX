@@ -130,7 +130,7 @@ export default function Quiz() {
 
   return (
     <QuizSession
-      key={buildSessionKey(effectiveConfig)}
+      key={sessionKey}
       config={effectiveConfig}
       chapterId={chapterId!}
       questions={questionsData.data}
