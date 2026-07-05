@@ -1,7 +1,6 @@
 import { type MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Card from '@/components/common/Card'
-import ResponsiveMedia from '@/components/common/ResponsiveMedia'
 import { Subject } from '@/types/subject'
 
 interface SubjectCardProps {
@@ -57,14 +56,6 @@ export default function SubjectCard({ subject, onEdit, onDelete }: SubjectCardPr
       className="group h-full border border-slate-200/80 bg-white/90 p-3 shadow-sm transition-all duration-200 sm:p-4 md:p-3 lg:p-4"
     >
       <div className="flex flex-col gap-3 md:hidden">
-        <ResponsiveMedia
-          src="/illustrations/subject-study.svg"
-          src2x="/illustrations/subject-study.svg"
-          alt={`${subject.name} illustration`}
-          className="mb-1"
-          width={320}
-          height={180}
-        />
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">

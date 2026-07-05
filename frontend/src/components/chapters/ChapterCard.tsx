@@ -1,6 +1,5 @@
 import { type MouseEvent } from 'react'
 import Card from '@/components/common/Card'
-import ResponsiveMedia from '@/components/common/ResponsiveMedia'
 import { Chapter } from '@/types/chapter'
 import { QuizProgress } from '@/types/quiz-progress'
 
@@ -63,14 +62,6 @@ export default function ChapterCard({ chapter, progress, onEdit, onDelete, onImp
       className="group h-full border border-slate-200/80 bg-white/90 p-3 shadow-sm transition-all duration-200 sm:p-4 md:p-3 lg:p-4"
     >
       <div className="flex flex-col gap-3 lg:hidden">
-        <ResponsiveMedia
-          src="/illustrations/chapter-study.svg"
-          src2x="/illustrations/chapter-study.svg"
-          alt={`${chapter.name} illustration`}
-          className="mb-1"
-          width={320}
-          height={180}
-        />
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
