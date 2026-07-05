@@ -48,13 +48,21 @@ export function useQuizState(initialConfig: QuizConfig, questions: QuizQuestion[
     return initialState ? normalizeState(initialState, initialConfig, questions) : createFreshState(initialConfig, questions)
   })
 
+  // Track if we've already initialized with restored state to prevent reset
+  const [isInitialized, setIsInitialized] = useState(false)
+
   useEffect(() => {
+    // If we already initialized with restored state, don't reset
+    if (isInitialized) return
+    
     if (initialState) {
       setState(normalizeState(initialState, initialConfig, questions))
+      setIsInitialized(true)
       return
     }
     setState(createFreshState(initialConfig, questions))
-  }, [initialConfig, questions, initialState])
+    setIsInitialized(true)
+  }, [initialConfig, questions, initialState, isInitialized])
 
   const clearSavedState = useCallback(() => {
     // Progress is persisted via backend storage rather than localStorage.
