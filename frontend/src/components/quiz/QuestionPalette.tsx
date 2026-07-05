@@ -53,7 +53,7 @@ export default function QuestionPalette({ state, onQuestionSelect, onClose }: Qu
         )}
       </div>
 
-      <div className="mb-3 hidden gap-2 text-xs text-slate-600 sm:grid sm:grid-cols-2">
+      <div className="mb-3 hidden flex-col gap-1.5 text-xs text-slate-600 sm:flex">
         <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full border border-emerald-300 bg-emerald-100"></div><span>Answered</span></div>
         <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full border border-violet-300 bg-violet-100"></div><span>Marked</span></div>
         <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full border border-rose-300 bg-rose-100"></div><span>Not answered</span></div>
