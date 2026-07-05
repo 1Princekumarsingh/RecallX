@@ -6,14 +6,48 @@
 
 *Transform raw question text into structured practice sessions with zero manual formatting*
 
-[Features](#features) • [Architecture](#architecture) • [Tech Stack](#tech-stack) • [Getting Started](#getting-started) • [Workflow](#workflow)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Now-blue?style=for-the-badge)](https://kinda-quiz.vercel.app/login)
+
+[Features](#features) • [Screenshots](#screenshots) • [Architecture](#architecture) • [Tech Stack](#tech-stack) • [Getting Started](#getting-started) • [Known Issues](#known-issues)
 
 ---
 
 </div>
 
+## 🎥 Live Demo
+
+Experience RecallX in action: **[https://kinda-quiz.vercel.app/login](https://kinda-quiz.vercel.app/login)**
+
+---
+
+## 📸 Screenshots
+
+### Dashboard Overview
+![Dashboard Overview](./assets/Dashboard%20Overview.png)
+*Real-time statistics, progress tracking, and quick access to continue your last practice session*
+
+### Practice Mode
+![Practice Mode](./assets/Practice%20Mode.png)
+*Interactive learning with immediate feedback, explanations, and confidence level tracking*
+
+### Exam Mode
+![Exam Mode](./assets/Exam%20Mode.png)
+*Realistic exam simulation without immediate feedback - perfect for self-assessment*
+
+### Question Import Interface
+![Question Import Interface](./assets/Question%20Import%20Interface.png)
+*Intelligent parser automatically extracts questions, options, answers, and explanations from raw text*
+
+### Results & Analytics
+![Results & Analytics](./assets/Results%20%26%20Analytics.png)
+*Comprehensive performance analysis with detailed breakdowns and actionable insights*
+
+---
+
 ## 📋 Table of Contents
 
+- [Live Demo](#live-demo)
+- [Screenshots](#screenshots)
 - [Problem Statement](#problem-statement)
 - [Solution](#solution)
 - [Features](#features)
@@ -26,6 +60,7 @@
 - [Performance](#performance)
 - [Getting Started](#getting-started)
 - [Usage](#usage)
+- [Known Issues](#known-issues)
 - [Future Enhancements](#future-enhancements)
 - [Contributing](#contributing)
 - [License](#license)
@@ -928,6 +963,38 @@ Answer: B
 
 ---
 
+## ⚠️ Known Issues
+
+### Save & Exit Feature - Resume Progress Issue
+
+**Status**: 🔧 In Progress
+
+**Description**: The "Save & Exit" button in quiz sessions currently has an issue with resuming saved progress. When users save and exit a quiz, then attempt to continue from either:
+- Dashboard "Continue Chapter" button
+- Chapter card "Continue from Q{X}" button
+
+The quiz may not properly restore:
+- Current question position
+- Previously selected answers
+- Quiz mode (practice/exam)
+- Timer configuration
+- Bookmarks and visited questions
+
+**Impact**: Users may need to restart quizzes from the beginning instead of resuming from where they left off.
+
+**Workaround**: 
+- Complete quiz sessions in one sitting when possible
+- Export your progress before exiting for backup
+- A notice banner is displayed on the Dashboard to inform users
+
+**Timeline**: A comprehensive fix is currently being developed. The issue affects:
+- Dashboard navigation (missing session_key parameter)
+- State restoration logic in the quiz component
+
+For detailed technical information, see the [bugfix spec](https://github.com/1Princekumarsingh/RecallX/tree/main/.kiro/specs/quiz-continue-resume-bugfix).
+
+---
+
 ## 🔮 Future Enhancements
 
 ### Planned Features
@@ -1073,36 +1140,7 @@ For licensing inquiries, please contact the project maintainer.
 
 ---
 
-## 📸 Screenshots
-
-> *Screenshots coming soon. The application is currently in active development.*
-
-### Dashboard Overview
-<!-- ![Dashboard](docs/images/dashboard.png) -->
-
-### Question Import Interface
-<!-- ![Import](docs/images/import.png) -->
-
-### Practice Mode
-<!-- ![Practice](docs/images/practice.png) -->
-
-### Exam Mode
-<!-- ![Exam](docs/images/exam.png) -->
-
-### Results & Analytics
-<!-- ![Results](docs/images/results.png) -->
-
----
-
-## 🎥 Demo
-
-> *Live demo link will be added upon deployment.*
-
-<!-- [View Live Demo](https://recallx-demo.example.com) -->
-
----
-
-## 🙏 Acknowledgments
+## � Acknowledgments
 
 - Client for providing domain expertise and requirements
 - FastAPI and React communities for excellent documentation
