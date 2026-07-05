@@ -41,14 +41,14 @@ const navigation = [
 
 export default function Sidebar() {
   return (
-    <aside aria-label="Sidebar navigation" className="hidden md:block w-full bg-white border-b border-gray-200 md:w-64 md:min-h-[calc(100vh-4rem)] md:border-r md:border-b-0">
-      <nav aria-label="Primary" className="space-y-2 p-3 md:p-6 md:sticky md:top-16">
+    <aside aria-label="Sidebar navigation" className="hidden md:block w-full bg-white border-b border-gray-200 md:w-48 lg:w-64 md:min-h-[calc(100vh-4rem)] md:border-r md:border-b-0">
+      <nav aria-label="Primary" className="space-y-2 p-3 md:p-4 lg:p-6 md:sticky md:top-16">
         {navigation.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
+              `flex items-center gap-3 rounded-xl px-3 md:px-3 lg:px-4 py-3.5 text-base font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
                 isActive
                   ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
                   : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 active:scale-95'
