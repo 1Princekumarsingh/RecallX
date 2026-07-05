@@ -60,9 +60,9 @@ export default function ChapterCard({ chapter, progress, onEdit, onDelete, onImp
   return (
     <Card
       hoverable
-      className="group h-full border border-slate-200/80 bg-white/90 p-5 shadow-sm transition-all duration-200 lg:p-4"
+      className="group h-full border border-slate-200/80 bg-white/90 p-3 shadow-sm transition-all duration-200 sm:p-4 md:p-3 lg:p-4"
     >
-      <div className="flex flex-col gap-3 lg:hidden">
+      <div className="flex flex-col gap-3 md:hidden">
         <ResponsiveMedia
           src="/illustrations/chapter-study.svg"
           src2x="/illustrations/chapter-study.svg"
@@ -196,21 +196,21 @@ export default function ChapterCard({ chapter, progress, onEdit, onDelete, onImp
         </div>
       </div>
 
-      <div className="hidden lg:flex lg:items-center lg:justify-between lg:gap-4">
-        <div className="flex-1">
+      <div className="hidden lg:flex lg:items-center lg:justify-between lg:gap-3">
+        <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate text-lg font-semibold leading-tight text-slate-900 md:text-xl lg:text-2xl">{chapter.name}</h3>
-            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${statusConfig.classes}`}>
+            <span className={`flex-shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${statusConfig.classes}`}>
               {statusConfig.label}
             </span>
           </div>
-          <div className="mt-2 flex gap-6 text-sm text-slate-600">
+          <div className="mt-2 flex flex-wrap gap-4 text-sm text-slate-600">
             <span>{chapter.question_count} questions</span>
             <span>{chapter.completed_count} completed</span>
           </div>
         </div>
 
-        <div className="w-48 flex-shrink-0">
+        <div className="flex-shrink-0">
           <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-600">Progress</span>
@@ -222,12 +222,40 @@ export default function ChapterCard({ chapter, progress, onEdit, onDelete, onImp
           </div>
         </div>
 
-        <div className="ml-2 flex items-center gap-2">
+        <div className="flex flex-shrink-0 items-center gap-1">
+          {hasProgress && chapter.question_count > 0 && (
+            <button
+              type="button"
+              onClick={() => onContinueChapter(chapter, progress)}
+              className="inline-flex h-9 items-center justify-center rounded-lg border border-violet-300 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 transition-colors hover:bg-violet-100"
+              title="Continue quiz"
+            >
+              Continue
+            </button>
+          )}
+          {chapter.question_count > 0 && (
+            <button
+              type="button"
+              onClick={() => onStartQuiz(chapter)}
+              className="inline-flex h-9 items-center justify-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-emerald-700"
+              title="Start quiz"
+            >
+              Start
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onImport(chapter)}
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-700"
+            title="Import questions"
+          >
+            Import
+          </button>
           {chapter.question_count > 0 && (
             <button
               type="button"
               onClick={handleExport}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:border-emerald-200 hover:text-emerald-600"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-colors hover:border-emerald-200 hover:text-emerald-600"
               aria-label="Export questions"
               title="Export questions"
             >
@@ -239,7 +267,7 @@ export default function ChapterCard({ chapter, progress, onEdit, onDelete, onImp
           <button
             type="button"
             onClick={handleEdit}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:border-primary-300 hover:text-primary-600"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-colors hover:border-primary-300 hover:text-primary-600"
             aria-label="Edit chapter"
             title="Edit chapter"
           >
@@ -250,7 +278,7 @@ export default function ChapterCard({ chapter, progress, onEdit, onDelete, onImp
           <button
             type="button"
             onClick={handleDelete}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:border-rose-200 hover:text-rose-600"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-colors hover:border-rose-200 hover:text-rose-600"
             aria-label="Delete chapter"
             title="Delete chapter"
           >
