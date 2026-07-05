@@ -104,7 +104,8 @@ def bulk_create_questions(
                 option_b=question_data.option_b.strip(),
                 option_c=question_data.option_c.strip(),
                 option_d=question_data.option_d.strip(),
-                correct_answer=question_data.correct_answer.upper()
+                correct_answer=question_data.correct_answer.upper(),
+                explanation=question_data.explanation.strip() if question_data.explanation else None
             )
             db.add(new_question)
             saved_questions.append(new_question)
