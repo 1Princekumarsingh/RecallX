@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { QuizState, QuizAnswer, QuizQuestion, QuizConfig, ConfidenceLevel } from '@/types/quiz'
 
 function createInitialAnswers(questions: QuizQuestion[]): Map<number, QuizAnswer> {
@@ -44,29 +44,20 @@ function normalizeState(state: QuizState, config: QuizConfig, questions: QuizQue
 }
 
 export function useQuizState(initialConfig: QuizConfig, questions: QuizQuestion[], initialState?: QuizState) {
-  // Use a ref to track if this is the first render with initialState
-  const hasRestoredState = useRef(!!initialState)
-  
   const [state, setState] = useState<QuizState>(() => {
     return initialState ? normalizeState(initialState, initialConfig, questions) : createFreshState(initialConfig, questions)
   })
 
+  // Only run effect if there's NO initial state to restore
+  // This prevents resetting restored quiz progress
   useEffect(() => {
-    // If we restored state on initial render, don't reset it
-    if (hasRestoredState.current && initialState) {
-      return
-    }
-    
+    // Skip entirely if we have initialState - it's already set in useState initializer
     if (initialState) {
-      setState(normalizeState(initialState, initialConfig, questions))
-      hasRestoredState.current = true
       return
     }
     
-    // Only create fresh state if we haven't restored state
-    if (!hasRestoredState.current) {
-      setState(createFreshState(initialConfig, questions))
-    }
+    // Only create fresh state if there's no initialState
+    setState(createFreshState(initialConfig, questions))
   }, [initialConfig, questions, initialState])
 
   const clearSavedState = useCallback(() => {
