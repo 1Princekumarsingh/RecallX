@@ -29,7 +29,7 @@ export default function Navbar() {
               type="button"
               aria-label="Open navigation menu"
               aria-expanded={mobileMenuOpen}
-              className="touch-target flex items-center justify-center rounded-full text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900 md:landscape:hidden"
+              className="touch-target flex items-center justify-center rounded-full text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900 lg:hidden"
               onClick={() => setMobileMenuOpen(true)}
             >
               <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -46,19 +46,19 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="hidden md:landscape:flex md:landscape:items-center md:landscape:gap-4">
+          <div className="hidden lg:flex lg:items-center lg:gap-4">
             <DesktopNav navigationItems={navigationItems} currentPath={location.pathname} />
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="hidden items-center gap-2 rounded-full bg-gray-50 px-3 py-1.5 text-sm text-gray-700 md:landscape:flex">
+            <div className="hidden items-center gap-2 rounded-full bg-gray-50 px-3 py-1.5 text-sm text-gray-700 lg:flex">
               <span>Welcome,</span>
               <span className="font-semibold text-gray-900">{user?.username}</span>
             </div>
             <button
               type="button"
               onClick={logout}
-              className="hidden touch-target rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900 md:landscape:inline-flex"
+              className="hidden touch-target rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900 lg:inline-flex"
               aria-label="Logout"
             >
               Logout

@@ -47,12 +47,13 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
     if (isOpen) {
       onClose()
     }
-  }, [location.pathname, onClose, isOpen])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname])
 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[60] md:hidden">
+    <div className="fixed inset-0 z-[60] lg:hidden">
       <button
         type="button"
         aria-label="Close navigation menu"
